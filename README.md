@@ -12,28 +12,28 @@ The pipeline is designed to:
 
 ---
 
-## Repository Structure
+### Repository Structure
 
-'''
-Souce_localization/
+```
+Source_localization/
 │
-├── Data/ # Example EEG datasets and outputs
+├── Data/                             # Example EEG datasets and outputs
 │
-├── eeglab2025.0.0/ # EEGLAB toolbox (required for preprocessing)
+├── eeglab2025.0.0/                   # EEGLAB toolbox (required for preprocessing)
 │
-├── fieldtrip-20250106/ # FieldTrip toolbox (required for source localization)
+├── fieldtrip-20250106/               # FieldTrip toolbox (required for source localization)
 │
-├── Source_localization_files/ # Additional scripts & resources for source analysis
+├── Source_localization_files/        # Additional scripts & resources for source analysis
 │
-├── WyntonRevised_EEGBurstDetection_VK/ # Burst detection functions
+├── WyntonRevised_EEGBurstDetection_VK/  # Burst detection functions
 │
-├── A1_Burst_Detection.m # Step 1: Detect bursts in raw EEG
-├── A2_Burst_ranges_extraction.m# Step 2: Extract time ranges of detected bursts
-├── B1_Burst_Source_Localization.m # Step 3: Perform source localization per burst
-├── C1_Source_Reconstruction.m # Step 4: Combine and reconstruct ROI data
-├── C2_Plot_normalized_ROIs.m # Step 5: Visualize normalized ROI data
+├── A1_Burst_Detection.m              # Step 1: Detect bursts in raw EEG
+├── A2_Burst_ranges_extraction.m      # Step 2: Extract time ranges of detected bursts
+├── B1_Burst_Source_Localization.m    # Step 3: Perform source localization per burst
+├── C1_Source_Reconstruction.m        # Step 4: Combine and reconstruct ROI data
+├── C2_Plot_normalized_ROIs.m         # Step 5: Visualize normalized ROI data
 │
-└── README.md # This file
+└── README.md                         # This file
 ```
 
 ---
