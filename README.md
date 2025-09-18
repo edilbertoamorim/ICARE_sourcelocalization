@@ -1,5 +1,7 @@
 # EEG Burst Source Localization Pipeline
 
+WARNING : Pipleine in development. (Some scripts might not be optimised)
+ 
 ## Overview
 This repository contains a pipeline for detecting EEG bursts, extracting burst ranges, performing source localization / reconstruction and ROI-based analysis.  
 It was developed for analyzing patient-specific EEG data and performing group-level analysis using **EEGLAB**, **FieldTrip**, and custom MATLAB scripts.
@@ -8,7 +10,7 @@ The pipeline is designed to:
 - Detect EEG bursts automatically
 - Extract burst time ranges
 - Perform source localization using standard MRI and lead fields
-- Normalize and visualize ROI-based results
+- Bayesian Learning Beamforming Surce Reconstruction (SBL-BF) (IN DEVELOPMENT...)
 
 ---
 
