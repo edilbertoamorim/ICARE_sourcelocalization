@@ -1,0 +1,29 @@
+
+                            < M A T L A B (R) >
+                  Copyright 1984-2022 The MathWorks, Inc.
+                  R2022b (9.13.0.2049777) 64-bit (glnxa64)
+                              August 24, 2022
+
+ 
+To get started, type doc.
+For product information, visit www.mathworks.com.
+ 
+  Config with properties:
+
+       patient_data_table: '/wynton/group/lee/ICARE_Burst_Detection/EEGBurstDetection/patient_outcome_info/CLINICAL_DATA_DEID_ALL_SITES.csv'
+                 repo_dir: '/wynton/group/lee/ICARE_Burst_Detection/EEGBurstDetection/'
+               output_dir: '/wynton/group/lee/ICARE_Burst_Detection/EEGBurstDetection/outputs/'
+    output_all_bursts_dir: '/wynton/group/lee/ICARE_Burst_Detection/EEGBurstDetection/outputs/'
+          save_images_dir: '/wynton/group/lee/ICARE_Burst_Detection/EEGBurstDetection/outputs/images/'
+          todo_files_list: '/wynton/group/lee/ICARE_Burst_Detection/EEGBurstDetection/src/sample_data/bs/wynton_test_subset.txt'
+
+File num 1 out of 2
+/wynton/group/lee/ICARE_Burst_Detection/physionet_edfs_hashID/YNH/02da589a1782369aa186854d59bf82224440e507456e5d64e74ef02728a2669e_20150301_151925.edf
+eeglab file already exists, loading...
+Elapsed time is 6.686942 seconds.
+loaded eeglab file seems good
+File num 2 out of 2
+/wynton/group/lee/ICARE_Burst_Detection/physionet_edfs_hashID/YNH/02da589a1782369aa186854d59bf82224440e507456e5d64e74ef02728a2669e_20150302_080022.edf
+eeglab file already exists, loading...
+Elapsed time is 5.474723 seconds.
+loaded eeglab file seems good

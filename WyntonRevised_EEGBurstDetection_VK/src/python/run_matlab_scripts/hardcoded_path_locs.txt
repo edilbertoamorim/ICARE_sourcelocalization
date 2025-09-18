@@ -1,0 +1,7 @@
+Some paths are hardcoded into different scripts (e.g. data location, hwere to save stuff)
+
+Can change those paths / alter as needed at below locations:
+
+config.m file in src/matlab/config and params folder
+
+run_matlab_scripy.py in src/python/run_matlab_scripts/

@@ -1,19 +1,20 @@
 # EEG Burst Source Localization Pipeline
 
 ## Overview
-This repository contains a pipeline for detecting EEG bursts, extracting burst ranges, and performing source localization and ROI-based analysis.  
+This repository contains a pipeline for detecting EEG bursts, extracting burst ranges, performing source localization / reconstruction and ROI-based analysis.  
 It was developed for analyzing patient-specific EEG data and performing group-level analysis using **EEGLAB**, **FieldTrip**, and custom MATLAB scripts.
 
 The pipeline is designed to:
 - Detect EEG bursts automatically
 - Extract burst time ranges
-- Perform source localization using patient MRI and lead fields
+- Perform source localization using standard MRI and lead fields
 - Normalize and visualize ROI-based results
 
 ---
 
 ## Repository Structure
 
+'''
 Souce_localization/
 │
 ├── Data/ # Example EEG datasets and outputs
@@ -32,9 +33,8 @@ Souce_localization/
 ├── C1_Source_Reconstruction.m # Step 4: Combine and reconstruct ROI data
 ├── C2_Plot_normalized_ROIs.m # Step 5: Visualize normalized ROI data
 │
-├── LFmgeneration.m # Script to generate lead fields
-│
 └── README.md # This file
+```
 
 ---
 
@@ -42,7 +42,7 @@ Souce_localization/
 
 ### Step 0: Setup
 1. Install MATLAB (R2021b or later recommended).
-2. Add EEGLAB and FieldTrip toolboxes to your MATLAB path:
+2. Add EEGLAB and FieldTrip toolboxes to your working folder and MATLAB path (in code):
 
    addpath('eeglab2025.0.0')  
    addpath('fieldtrip-20250106')  
@@ -63,11 +63,11 @@ Souce_localization/
 
 ### Step 3: Burst Source Localization
 - Run B1_Burst_Source_Localization.m to perform source localization for each detected burst.  
-- Uses FieldTrip functions and patient-specific lead fields.  
+- Uses FieldTrip functions and standard pre-computed lead fields.  
 - **Input:** Burst ranges + MNI lead fields  
 - **Output:** Source power estimates per burst  
 
-> **Note:** If lead fields are not already generated, run LFmgeneration.m before Step 3.
+> **Note:** If lead fields are not already generated, run LFmgeneration.m using mri data and adapting the electrodes to the headmodel (manually) before Step 3.
 
 ### Step 4: ROI Reconstruction
 - WARNING : Development...

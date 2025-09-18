@@ -1,0 +1,184 @@
+
+                            < M A T L A B (R) >
+                  Copyright 1984-2022 The MathWorks, Inc.
+                  R2022b (9.13.0.2049777) 64-bit (glnxa64)
+                              August 24, 2022
+
+ 
+To get started, type doc.
+For product information, visit www.mathworks.com.
+ 
+  Config with properties:
+
+       patient_data_table: '/wynton/group/lee/ICARE_Burst_Detection/EEGBurstDetection/patient_outcome_info/CLINICAL_DATA_DEID_ALL_SITES.csv'
+                 repo_dir: '/wynton/group/lee/ICARE_Burst_Detection/EEGBurstDetection/'
+               output_dir: '/wynton/group/lee/ICARE_Burst_Detection/EEGBurstDetection/outputs/'
+    output_all_bursts_dir: '/wynton/group/lee/ICARE_Burst_Detection/EEGBurstDetection/outputs/'
+          save_images_dir: '/wynton/group/lee/ICARE_Burst_Detection/EEGBurstDetection/outputs/images/'
+          todo_files_list: '/wynton/group/lee/ICARE_Burst_Detection/EEGBurstDetection/src/sample_data/bs/wynton_test_subset.txt'
+
+  SimilarityParams with properties:
+
+       min_burst_time: 0.5000
+       max_burst_time: 5
+    burst_splice_time: 0.5000
+     normalize_bursts: 1
+              maxsamp: 200
+        min_no_bursts: 20
+
+  DetectBsParams with properties:
+
+                forgetting_time: 0.1047
+                burst_threshold: 1.7500
+                  agree_percent: 0.6000
+           min_suppression_time: 0.5000
+                 bsr_low_cutoff: 0.5000
+                bsr_high_cutoff: 1
+                     bsr_window: 60
+                    min_bs_time: 600
+    bs_episode_smoothing_amount: 60
+
+File num 1 out of 2
+/wynton/group/lee/ICARE_Burst_Detection/physionet_edfs_hashID/YNH/02da589a1782369aa186854d59bf82224440e507456e5d64e74ef02728a2669e_20150301_151925.edf
+running pipeline_up_to_detect_bs...
+Loading eeglab_eeg for file 02da589a1782369aa186854d59bf82224440e507456e5d64e74ef02728a2669e_20150301_151925
+start edf_to_struct
+Step 1 of 2: Reading requested records. (This may take a few minutes.)...
+Step 2 of 2: Parsing data...
+Elapsed time is 45.768658 seconds.
+start standardize_struct
+Octave functions should not run on Matlab
+Removing path ... 
+Elapsed time is 12.933067 seconds.
+start struct_to_EEGLab
+eeg_checkset warning: 3rd dimension size of data (1) does not match the number of epochs (0), corrected
+eeg_checkset warning: number of columns in data (12006400) does not match the number of points (0): corrected
+eeg_checkset note: upper time limit (xmax) adjusted so (xmax-xmin)*srate+1 = number of frames
+readlocs(): 'loc' format assumed from file extension
+Saving eeglab 02da589a1782369aa186854d59bf82224440e507456e5d64e74ef02728a2669e_20150301_151925
+Done loading and saving eeglab 02da589a1782369aa186854d59bf82224440e507456e5d64e74ef02728a2669e_20150301_151925
+Running bs detection...
+Elapsed time is 10.881562 seconds.
+done pipeline up to detect bs, time taken: 
+Elapsed time is 128.545907 seconds.
+saving detect_bs results
+writing zs_bsr
+Elapsed time is 9.325409 seconds.
+writing 0 episodes with channel Fp1-F7
+Elapsed time is 0.000057 seconds.
+Done with file 02da589a1782369aa186854d59bf82224440e507456e5d64e74ef02728a2669e_20150301_151925
+Has no burst suppression episodes
+writing xcorr similarity output...
+Elapsed time is 0.031020 seconds.
+Has no burst suppression episodes
+Elapsed time is 0.037186 seconds.
+writing dtw similarity output...
+Elapsed time is 0.004225 seconds.
+File num 2 out of 2
+/wynton/group/lee/ICARE_Burst_Detection/physionet_edfs_hashID/YNH/02da589a1782369aa186854d59bf82224440e507456e5d64e74ef02728a2669e_20150302_080022.edf
+running pipeline_up_to_detect_bs...
+Loading eeglab_eeg for file 02da589a1782369aa186854d59bf82224440e507456e5d64e74ef02728a2669e_20150302_080022
+start edf_to_struct
+Step 1 of 2: Reading requested records. (This may take a few minutes.)...
+Step 2 of 2: Parsing data...
+Elapsed time is 37.060660 seconds.
+start standardize_struct
+Elapsed time is 7.768751 seconds.
+start struct_to_EEGLab
+eeg_checkset warning: 3rd dimension size of data (1) does not match the number of epochs (0), corrected
+eeg_checkset warning: number of columns in data (9812480) does not match the number of points (0): corrected
+eeg_checkset note: upper time limit (xmax) adjusted so (xmax-xmin)*srate+1 = number of frames
+readlocs(): 'loc' format assumed from file extension
+Saving eeglab 02da589a1782369aa186854d59bf82224440e507456e5d64e74ef02728a2669e_20150302_080022
+Done loading and saving eeglab 02da589a1782369aa186854d59bf82224440e507456e5d64e74ef02728a2669e_20150302_080022
+Running bs detection...
+Elapsed time is 7.651953 seconds.
+done pipeline up to detect bs, time taken: 
+Elapsed time is 95.607837 seconds.
+saving detect_bs results
+writing zs_bsr
+Elapsed time is 7.656505 seconds.
+writing 3 episodes with channel Fp1-F7
+Elapsed time is 4.437572 seconds.
+Done with file 02da589a1782369aa186854d59bf82224440e507456e5d64e74ef02728a2669e_20150302_080022
+has bs episodes, calculating correlation similarities...
+num bursts 195
+num bursts after length filter137
+num bursts 288
+num bursts after length filter172
+num bursts 4182
+num bursts after length filter2504
+pair number 100000 out of 3133756
+pair number 200000 out of 3133756
+pair number 300000 out of 3133756
+pair number 400000 out of 3133756
+pair number 500000 out of 3133756
+pair number 600000 out of 3133756
+pair number 700000 out of 3133756
+pair number 800000 out of 3133756
+pair number 900000 out of 3133756
+pair number 1000000 out of 3133756
+pair number 1100000 out of 3133756
+pair number 1200000 out of 3133756
+pair number 1300000 out of 3133756
+pair number 1400000 out of 3133756
+pair number 1500000 out of 3133756
+pair number 1600000 out of 3133756
+pair number 1700000 out of 3133756
+pair number 1800000 out of 3133756
+pair number 1900000 out of 3133756
+pair number 2000000 out of 3133756
+pair number 2100000 out of 3133756
+pair number 2200000 out of 3133756
+pair number 2300000 out of 3133756
+pair number 2400000 out of 3133756
+pair number 2500000 out of 3133756
+pair number 2600000 out of 3133756
+pair number 2700000 out of 3133756
+pair number 2800000 out of 3133756
+pair number 2900000 out of 3133756
+pair number 3000000 out of 3133756
+pair number 3100000 out of 3133756
+writing xcorr similarity output...
+Elapsed time is 0.867015 seconds.
+has bs episodes, calculating dtw similarities...
+num bursts 195
+num bursts after length filter137
+num bursts 288
+num bursts after length filter172
+num bursts 4182
+num bursts after length filter2504
+pair number 100000 out of 3133756
+pair number 200000 out of 3133756
+pair number 300000 out of 3133756
+pair number 400000 out of 3133756
+pair number 500000 out of 3133756
+pair number 600000 out of 3133756
+pair number 700000 out of 3133756
+pair number 800000 out of 3133756
+pair number 900000 out of 3133756
+pair number 1000000 out of 3133756
+pair number 1100000 out of 3133756
+pair number 1200000 out of 3133756
+pair number 1300000 out of 3133756
+pair number 1400000 out of 3133756
+pair number 1500000 out of 3133756
+pair number 1600000 out of 3133756
+pair number 1700000 out of 3133756
+pair number 1800000 out of 3133756
+pair number 1900000 out of 3133756
+pair number 2000000 out of 3133756
+pair number 2100000 out of 3133756
+pair number 2200000 out of 3133756
+pair number 2300000 out of 3133756
+pair number 2400000 out of 3133756
+pair number 2500000 out of 3133756
+pair number 2600000 out of 3133756
+pair number 2700000 out of 3133756
+pair number 2800000 out of 3133756
+pair number 2900000 out of 3133756
+pair number 3000000 out of 3133756
+pair number 3100000 out of 3133756
+Elapsed time is 289.227360 seconds.
+writing dtw similarity output...
+Elapsed time is 0.861308 seconds.

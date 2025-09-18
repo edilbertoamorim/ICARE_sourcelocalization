@@ -1,0 +1,6 @@
+first, change directory to this directory in wynton.
+
+then use a job submission command:
+e.g. qsub -j yes -cwd -pe smp 8 -l mem_free=4G run_wynton_script.sh
+
+THE .SH FILE CALLS ONE STEP AT A TIME IN THE PIPELINE! You will have to run it twice, once for each step. Make sure to comment out the other step in each run (e.g. first run just run the first script and comment out the second one, second run run the second script and comment out the first).

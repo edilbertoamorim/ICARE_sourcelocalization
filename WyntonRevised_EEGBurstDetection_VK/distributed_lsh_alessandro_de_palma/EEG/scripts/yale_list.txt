@@ -1,0 +1,637 @@
+2c2,3
+< /afs/csail.mit.edu/u/a/adepalma/NFS/EEG-dataset/outboxYALE/Batch1/ynh_116_1_0_20140505T115212.edf
+---
+> /afs/csail.mit.edu/u/a/adepalma/NFS/EEG-dataset/outboxYALE/Batch1/ynh_116_6_0_20140504T115144.edf
+> /afs/csail.mit.edu/u/a/adepalma/NFS/EEG-dataset/outboxYALE/Batch1/ynh_116_4_0_20140504T130923.edf
+4,6d4
+< /afs/csail.mit.edu/u/a/adepalma/NFS/EEG-dataset/outboxYALE/Batch1/ynh_116_9_0_20140506T102532.edf
+< /afs/csail.mit.edu/u/a/adepalma/NFS/EEG-dataset/outboxYALE/Batch1/ynh_116_1_1_20140505T171743.edf
+< /afs/csail.mit.edu/u/a/adepalma/NFS/EEG-dataset/outboxYALE/Batch1/ynh_116_3_0_20140506T080118.edf
+8,10d5
+< /afs/csail.mit.edu/u/a/adepalma/NFS/EEG-dataset/outboxYALE/Batch1/ynh_116_9_1_20140506T155103.edf
+< /afs/csail.mit.edu/u/a/adepalma/NFS/EEG-dataset/outboxYALE/Batch1/ynh_116_1_2_20140505T224314.edf
+< /afs/csail.mit.edu/u/a/adepalma/NFS/EEG-dataset/outboxYALE/Batch1/ynh_116_3_1_20140506T132649.edf
+12,16d6
+< /afs/csail.mit.edu/u/a/adepalma/NFS/EEG-dataset/outboxYALE/Batch1/ynh_116_6_0_20140504T115144.edf
+< /afs/csail.mit.edu/u/a/adepalma/NFS/EEG-dataset/outboxYALE/Batch1/ynh_116_9_2_20140506T211634.edf
+< /afs/csail.mit.edu/u/a/adepalma/NFS/EEG-dataset/outboxYALE/Batch1/ynh_116_1_3_20140506T040845.edf
+< /afs/csail.mit.edu/u/a/adepalma/NFS/EEG-dataset/outboxYALE/Batch1/ynh_116_3_2_20140506T185220.edf
+< /afs/csail.mit.edu/u/a/adepalma/NFS/EEG-dataset/outboxYALE/Batch1/ynh_116_8_0_20140505T080118.edf
+17a8,16
+> /afs/csail.mit.edu/u/a/adepalma/NFS/EEG-dataset/outboxYALE/Batch1/ynh_116_8_0_20140505T080118.edf
+> /afs/csail.mit.edu/u/a/adepalma/NFS/EEG-dataset/outboxYALE/Batch1/ynh_116_1_0_20140505T115212.edf
+> /afs/csail.mit.edu/u/a/adepalma/NFS/EEG-dataset/outboxYALE/Batch1/ynh_116_1_1_20140505T171743.edf
+> /afs/csail.mit.edu/u/a/adepalma/NFS/EEG-dataset/outboxYALE/Batch1/ynh_116_1_2_20140505T224314.edf
+> /afs/csail.mit.edu/u/a/adepalma/NFS/EEG-dataset/outboxYALE/Batch1/ynh_116_1_3_20140506T040845.edf
+> /afs/csail.mit.edu/u/a/adepalma/NFS/EEG-dataset/outboxYALE/Batch1/ynh_116_3_0_20140506T080118.edf
+> /afs/csail.mit.edu/u/a/adepalma/NFS/EEG-dataset/outboxYALE/Batch1/ynh_116_9_0_20140506T102532.edf
+> /afs/csail.mit.edu/u/a/adepalma/NFS/EEG-dataset/outboxYALE/Batch1/ynh_116_3_1_20140506T132649.edf
+> /afs/csail.mit.edu/u/a/adepalma/NFS/EEG-dataset/outboxYALE/Batch1/ynh_116_9_1_20140506T155103.edf
+19c18,19
+< /afs/csail.mit.edu/u/a/adepalma/NFS/EEG-dataset/outboxYALE/Batch1/ynh_116_9_3_20140507T024205.edf
+---
+> /afs/csail.mit.edu/u/a/adepalma/NFS/EEG-dataset/outboxYALE/Batch1/ynh_116_3_2_20140506T185220.edf
+> /afs/csail.mit.edu/u/a/adepalma/NFS/EEG-dataset/outboxYALE/Batch1/ynh_116_9_2_20140506T211634.edf
+21,22c21
+< /afs/csail.mit.edu/u/a/adepalma/NFS/EEG-dataset/outboxYALE/Batch1/ynh_116_9_4_20140507T080737.edf
+< /afs/csail.mit.edu/u/a/adepalma/NFS/EEG-dataset/outboxYALE/Batch1/ynh_116_7_0_20140507T080116.edf
+---
+> /afs/csail.mit.edu/u/a/adepalma/NFS/EEG-dataset/outboxYALE/Batch1/ynh_116_9_3_20140507T024205.edf
+24c23,24
+< /afs/csail.mit.edu/u/a/adepalma/NFS/EEG-dataset/outboxYALE/Batch1/ynh_116_7_1_20140507T132647.edf
+---
+> /afs/csail.mit.edu/u/a/adepalma/NFS/EEG-dataset/outboxYALE/Batch1/ynh_116_7_0_20140507T080116.edf
+> /afs/csail.mit.edu/u/a/adepalma/NFS/EEG-dataset/outboxYALE/Batch1/ynh_116_9_4_20140507T080737.edf
+25a26
+> /afs/csail.mit.edu/u/a/adepalma/NFS/EEG-dataset/outboxYALE/Batch1/ynh_116_7_1_20140507T132647.edf
+27d27
+< /afs/csail.mit.edu/u/a/adepalma/NFS/EEG-dataset/outboxYALE/Batch1/ynh_116_4_0_20140504T130923.edf
+5d4
+< /afs/csail.mit.edu/u/a/adepalma/NFS/EEG-dataset/outboxYALE/Batch4/ynh_48_2_0_20150207T161837.edf
+6a6
+> /afs/csail.mit.edu/u/a/adepalma/NFS/EEG-dataset/outboxYALE/Batch4/ynh_48_2_0_20150207T161837.edf
+1d0
+< /afs/csail.mit.edu/u/a/adepalma/NFS/EEG-dataset/outboxYALE/Batch3/ynh_159_1_0_20150218T080028.edf
+2a2
+> /afs/csail.mit.edu/u/a/adepalma/NFS/EEG-dataset/outboxYALE/Batch3/ynh_159_1_0_20150218T080028.edf
+2d1
+< /afs/csail.mit.edu/u/a/adepalma/NFS/EEG-dataset/outboxYALE/Batch3/ynh_26_1_0_20150128T080022.edf
+3a3
+> /afs/csail.mit.edu/u/a/adepalma/NFS/EEG-dataset/outboxYALE/Batch3/ynh_26_1_0_20150128T080022.edf
+1d0
+< /afs/csail.mit.edu/u/a/adepalma/NFS/EEG-dataset/outboxYALE/Batch2/ynh_130_2_0_20150121T085132.edf
+3d1
+< /afs/csail.mit.edu/u/a/adepalma/NFS/EEG-dataset/outboxYALE/Batch2/ynh_130_2_1_20150121T194234.edf
+5,6c3,4
+< /afs/csail.mit.edu/u/a/adepalma/NFS/EEG-dataset/outboxYALE/Batch2/ynh_130_3_0_20150122T095306.edf
+< /afs/csail.mit.edu/u/a/adepalma/NFS/EEG-dataset/outboxYALE/Batch2/ynh_130_4_0_20150122T063853.edf
+---
+> /afs/csail.mit.edu/u/a/adepalma/NFS/EEG-dataset/outboxYALE/Batch2/ynh_130_2_0_20150121T085132.edf
+> /afs/csail.mit.edu/u/a/adepalma/NFS/EEG-dataset/outboxYALE/Batch2/ynh_130_2_1_20150121T194234.edf
+7a6,7
+> /afs/csail.mit.edu/u/a/adepalma/NFS/EEG-dataset/outboxYALE/Batch2/ynh_130_4_0_20150122T063853.edf
+> /afs/csail.mit.edu/u/a/adepalma/NFS/EEG-dataset/outboxYALE/Batch2/ynh_130_3_0_20150122T095306.edf
+1d0
+< /afs/csail.mit.edu/u/a/adepalma/NFS/EEG-dataset/outboxYALE/Batch3/ynh_21_1_0_20150512T080025.edf
+2a2
+> /afs/csail.mit.edu/u/a/adepalma/NFS/EEG-dataset/outboxYALE/Batch3/ynh_21_1_0_20150512T080025.edf
+2d1
+< /afs/csail.mit.edu/u/a/adepalma/NFS/EEG-dataset/outboxYALE/Batch2/ynh_129_1_0_20140518T080118.edf
+3a3
+> /afs/csail.mit.edu/u/a/adepalma/NFS/EEG-dataset/outboxYALE/Batch2/ynh_129_1_0_20140518T080118.edf
+1d0
+< /afs/csail.mit.edu/u/a/adepalma/NFS/EEG-dataset/outboxYALE/Batch4/ynh_38_3_0_20150420T080022.edf
+3,4d1
+< /afs/csail.mit.edu/u/a/adepalma/NFS/EEG-dataset/outboxYALE/Batch4/ynh_38_3_1_20150420T185124.edf
+< /afs/csail.mit.edu/u/a/adepalma/NFS/EEG-dataset/outboxYALE/Batch4/ynh_38_2_0_20150421T080025.edf
+5a3,4
+> /afs/csail.mit.edu/u/a/adepalma/NFS/EEG-dataset/outboxYALE/Batch4/ynh_38_3_0_20150420T080022.edf
+> /afs/csail.mit.edu/u/a/adepalma/NFS/EEG-dataset/outboxYALE/Batch4/ynh_38_3_1_20150420T185124.edf
+6a6
+> /afs/csail.mit.edu/u/a/adepalma/NFS/EEG-dataset/outboxYALE/Batch4/ynh_38_2_0_20150421T080025.edf
+1,2d0
+< /afs/csail.mit.edu/u/a/adepalma/NFS/EEG-dataset/outboxYALE/Batch4/ynh_45_3_0_20140408T165418.edf
+< /afs/csail.mit.edu/u/a/adepalma/NFS/EEG-dataset/outboxYALE/Batch4/ynh_45_3_1_20140408T221949.edf
+4c2,3
+< /afs/csail.mit.edu/u/a/adepalma/NFS/EEG-dataset/outboxYALE/Batch4/ynh_45_1_0_20140409T080118.edf
+---
+> /afs/csail.mit.edu/u/a/adepalma/NFS/EEG-dataset/outboxYALE/Batch4/ynh_45_2_0_20140408T025716.edf
+> /afs/csail.mit.edu/u/a/adepalma/NFS/EEG-dataset/outboxYALE/Batch4/ynh_45_4_1_20140408T043906.edf
+5a5,7
+> /afs/csail.mit.edu/u/a/adepalma/NFS/EEG-dataset/outboxYALE/Batch4/ynh_45_5_1_20140408T132655.edf
+> /afs/csail.mit.edu/u/a/adepalma/NFS/EEG-dataset/outboxYALE/Batch4/ynh_45_3_0_20140408T165418.edf
+> /afs/csail.mit.edu/u/a/adepalma/NFS/EEG-dataset/outboxYALE/Batch4/ynh_45_3_1_20140408T221949.edf
+7c9
+< /afs/csail.mit.edu/u/a/adepalma/NFS/EEG-dataset/outboxYALE/Batch4/ynh_45_4_1_20140408T043906.edf
+---
+> /afs/csail.mit.edu/u/a/adepalma/NFS/EEG-dataset/outboxYALE/Batch4/ynh_45_1_0_20140409T080118.edf
+9,10d10
+< /afs/csail.mit.edu/u/a/adepalma/NFS/EEG-dataset/outboxYALE/Batch4/ynh_45_5_1_20140408T132655.edf
+< /afs/csail.mit.edu/u/a/adepalma/NFS/EEG-dataset/outboxYALE/Batch4/ynh_45_2_0_20140408T025716.edf
+0a1,8
+> /afs/csail.mit.edu/u/a/adepalma/NFS/EEG-dataset/outboxYALE/Batch4/ynh_41_7_0_20150404T205729.edf
+> /afs/csail.mit.edu/u/a/adepalma/NFS/EEG-dataset/outboxYALE/Batch4/ynh_41_7_1_20150405T022300.edf
+> /afs/csail.mit.edu/u/a/adepalma/NFS/EEG-dataset/outboxYALE/Batch4/ynh_41_3_0_20150405T063501.edf
+> /afs/csail.mit.edu/u/a/adepalma/NFS/EEG-dataset/outboxYALE/Batch4/ynh_41_4_0_20150405T080032.edf
+> /afs/csail.mit.edu/u/a/adepalma/NFS/EEG-dataset/outboxYALE/Batch4/ynh_41_4_1_20150405T132603.edf
+> /afs/csail.mit.edu/u/a/adepalma/NFS/EEG-dataset/outboxYALE/Batch4/ynh_41_4_2_20150405T185134.edf
+> /afs/csail.mit.edu/u/a/adepalma/NFS/EEG-dataset/outboxYALE/Batch4/ynh_41_4_3_20150406T001705.edf
+> /afs/csail.mit.edu/u/a/adepalma/NFS/EEG-dataset/outboxYALE/Batch4/ynh_41_5_0_20150406T042708.edf
+2a11
+> /afs/csail.mit.edu/u/a/adepalma/NFS/EEG-dataset/outboxYALE/Batch4/ynh_41_5_1_20150406T095239.edf
+3a13
+> /afs/csail.mit.edu/u/a/adepalma/NFS/EEG-dataset/outboxYALE/Batch4/ynh_41_5_2_20150406T151810.edf
+4a15,18
+> /afs/csail.mit.edu/u/a/adepalma/NFS/EEG-dataset/outboxYALE/Batch4/ynh_41_5_3_20150406T204341.edf
+> /afs/csail.mit.edu/u/a/adepalma/NFS/EEG-dataset/outboxYALE/Batch4/ynh_41_5_4_20150407T020913.edf
+> /afs/csail.mit.edu/u/a/adepalma/NFS/EEG-dataset/outboxYALE/Batch4/ynh_41_13_0_20150407T035638.edf
+> /afs/csail.mit.edu/u/a/adepalma/NFS/EEG-dataset/outboxYALE/Batch4/ynh_41_8_0_20150407T055900.edf
+7,10d20
+< /afs/csail.mit.edu/u/a/adepalma/NFS/EEG-dataset/outboxYALE/Batch4/ynh_41_11_0_20150409T080021.edf
+< /afs/csail.mit.edu/u/a/adepalma/NFS/EEG-dataset/outboxYALE/Batch4/ynh_41_5_0_20150406T042708.edf
+< /afs/csail.mit.edu/u/a/adepalma/NFS/EEG-dataset/outboxYALE/Batch4/ynh_41_5_1_20150406T095239.edf
+< /afs/csail.mit.edu/u/a/adepalma/NFS/EEG-dataset/outboxYALE/Batch4/ynh_41_5_2_20150406T151810.edf
+12,15d21
+< /afs/csail.mit.edu/u/a/adepalma/NFS/EEG-dataset/outboxYALE/Batch4/ynh_41_4_0_20150405T080032.edf
+< /afs/csail.mit.edu/u/a/adepalma/NFS/EEG-dataset/outboxYALE/Batch4/ynh_41_9_0_20150408T162307.edf
+< /afs/csail.mit.edu/u/a/adepalma/NFS/EEG-dataset/outboxYALE/Batch4/ynh_41_7_0_20150404T205729.edf
+< /afs/csail.mit.edu/u/a/adepalma/NFS/EEG-dataset/outboxYALE/Batch4/ynh_41_5_3_20150406T204341.edf
+17,22d22
+< /afs/csail.mit.edu/u/a/adepalma/NFS/EEG-dataset/outboxYALE/Batch4/ynh_41_4_1_20150405T132603.edf
+< /afs/csail.mit.edu/u/a/adepalma/NFS/EEG-dataset/outboxYALE/Batch4/ynh_41_7_1_20150405T022300.edf
+< /afs/csail.mit.edu/u/a/adepalma/NFS/EEG-dataset/outboxYALE/Batch4/ynh_41_1_0_20150408T080031.edf
+< /afs/csail.mit.edu/u/a/adepalma/NFS/EEG-dataset/outboxYALE/Batch4/ynh_41_8_0_20150407T055900.edf
+< /afs/csail.mit.edu/u/a/adepalma/NFS/EEG-dataset/outboxYALE/Batch4/ynh_41_3_0_20150405T063501.edf
+< /afs/csail.mit.edu/u/a/adepalma/NFS/EEG-dataset/outboxYALE/Batch4/ynh_41_5_4_20150407T020913.edf
+24,27d23
+< /afs/csail.mit.edu/u/a/adepalma/NFS/EEG-dataset/outboxYALE/Batch4/ynh_41_4_2_20150405T185134.edf
+< /afs/csail.mit.edu/u/a/adepalma/NFS/EEG-dataset/outboxYALE/Batch4/ynh_41_13_0_20150407T035638.edf
+< /afs/csail.mit.edu/u/a/adepalma/NFS/EEG-dataset/outboxYALE/Batch4/ynh_41_9_1_20150409T031409.edf
+< /afs/csail.mit.edu/u/a/adepalma/NFS/EEG-dataset/outboxYALE/Batch4/ynh_41_1_1_20150408T132602.edf
+29c25,29
+< /afs/csail.mit.edu/u/a/adepalma/NFS/EEG-dataset/outboxYALE/Batch4/ynh_41_4_3_20150406T001705.edf
+---
+> /afs/csail.mit.edu/u/a/adepalma/NFS/EEG-dataset/outboxYALE/Batch4/ynh_41_1_0_20150408T080031.edf
+> /afs/csail.mit.edu/u/a/adepalma/NFS/EEG-dataset/outboxYALE/Batch4/ynh_41_1_1_20150408T132602.edf
+> /afs/csail.mit.edu/u/a/adepalma/NFS/EEG-dataset/outboxYALE/Batch4/ynh_41_9_0_20150408T162307.edf
+> /afs/csail.mit.edu/u/a/adepalma/NFS/EEG-dataset/outboxYALE/Batch4/ynh_41_9_1_20150409T031409.edf
+> /afs/csail.mit.edu/u/a/adepalma/NFS/EEG-dataset/outboxYALE/Batch4/ynh_41_11_0_20150409T080021.edf
+3d2
+< /afs/csail.mit.edu/u/a/adepalma/NFS/EEG-dataset/outboxYALE/Batch3/ynh_36_5_0_20150630T142013.edf
+5c4
+< /afs/csail.mit.edu/u/a/adepalma/NFS/EEG-dataset/outboxYALE/Batch3/ynh_36_5_1_20150701T011115.edf
+---
+> /afs/csail.mit.edu/u/a/adepalma/NFS/EEG-dataset/outboxYALE/Batch3/ynh_36_5_0_20150630T142013.edf
+6a6
+> /afs/csail.mit.edu/u/a/adepalma/NFS/EEG-dataset/outboxYALE/Batch3/ynh_36_5_1_20150701T011115.edf
+0a1,2
+> /afs/csail.mit.edu/u/a/adepalma/NFS/EEG-dataset/outboxYALE/Batch1/ynh_115_2_0_20140222T224041.edf
+> /afs/csail.mit.edu/u/a/adepalma/NFS/EEG-dataset/outboxYALE/Batch1/ynh_115_2_1_20140223T040612.edf
+4,5d5
+< /afs/csail.mit.edu/u/a/adepalma/NFS/EEG-dataset/outboxYALE/Batch1/ynh_115_3_0_20140225T091625.edf
+< /afs/csail.mit.edu/u/a/adepalma/NFS/EEG-dataset/outboxYALE/Batch1/ynh_115_2_0_20140222T224041.edf
+6a7
+> /afs/csail.mit.edu/u/a/adepalma/NFS/EEG-dataset/outboxYALE/Batch1/ynh_115_3_0_20140225T091625.edf
+8d8
+< /afs/csail.mit.edu/u/a/adepalma/NFS/EEG-dataset/outboxYALE/Batch1/ynh_115_2_1_20140223T040612.edf
+1d0
+< /afs/csail.mit.edu/u/a/adepalma/NFS/EEG-dataset/outboxYALE/Batch1/ynh_106_5_0_20140531T085727.edf
+3,6d1
+< /afs/csail.mit.edu/u/a/adepalma/NFS/EEG-dataset/outboxYALE/Batch1/ynh_106_4_0_20140601T113512.edf
+< /afs/csail.mit.edu/u/a/adepalma/NFS/EEG-dataset/outboxYALE/Batch1/ynh_106_5_1_20140531T194829.edf
+< /afs/csail.mit.edu/u/a/adepalma/NFS/EEG-dataset/outboxYALE/Batch1/ynh_106_8_0_20140603T185903.edf
+< /afs/csail.mit.edu/u/a/adepalma/NFS/EEG-dataset/outboxYALE/Batch1/ynh_106_3_0_20140602T091433.edf
+7a3,9
+> /afs/csail.mit.edu/u/a/adepalma/NFS/EEG-dataset/outboxYALE/Batch1/ynh_106_1_2_20140530T103646.edf
+> /afs/csail.mit.edu/u/a/adepalma/NFS/EEG-dataset/outboxYALE/Batch1/ynh_106_1_3_20140530T212748.edf
+> /afs/csail.mit.edu/u/a/adepalma/NFS/EEG-dataset/outboxYALE/Batch1/ynh_106_1_4_20140531T081851.edf
+> /afs/csail.mit.edu/u/a/adepalma/NFS/EEG-dataset/outboxYALE/Batch1/ynh_106_5_0_20140531T085727.edf
+> /afs/csail.mit.edu/u/a/adepalma/NFS/EEG-dataset/outboxYALE/Batch1/ynh_106_5_1_20140531T194829.edf
+> /afs/csail.mit.edu/u/a/adepalma/NFS/EEG-dataset/outboxYALE/Batch1/ynh_106_5_2_20140601T063932.edf
+> /afs/csail.mit.edu/u/a/adepalma/NFS/EEG-dataset/outboxYALE/Batch1/ynh_106_4_0_20140601T113512.edf
+9c11,12
+< /afs/csail.mit.edu/u/a/adepalma/NFS/EEG-dataset/outboxYALE/Batch1/ynh_106_2_0_20140605T090541.edf
+---
+> /afs/csail.mit.edu/u/a/adepalma/NFS/EEG-dataset/outboxYALE/Batch1/ynh_106_3_0_20140602T091433.edf
+> /afs/csail.mit.edu/u/a/adepalma/NFS/EEG-dataset/outboxYALE/Batch1/ynh_106_3_1_20140602T200535.edf
+11c14
+< /afs/csail.mit.edu/u/a/adepalma/NFS/EEG-dataset/outboxYALE/Batch1/ynh_106_5_2_20140601T063932.edf
+---
+> /afs/csail.mit.edu/u/a/adepalma/NFS/EEG-dataset/outboxYALE/Batch1/ynh_106_8_0_20140603T185903.edf
+14,15c17
+< /afs/csail.mit.edu/u/a/adepalma/NFS/EEG-dataset/outboxYALE/Batch1/ynh_106_3_1_20140602T200535.edf
+< /afs/csail.mit.edu/u/a/adepalma/NFS/EEG-dataset/outboxYALE/Batch1/ynh_106_1_2_20140530T103646.edf
+---
+> /afs/csail.mit.edu/u/a/adepalma/NFS/EEG-dataset/outboxYALE/Batch1/ynh_106_2_0_20140605T090541.edf
+17,18d18
+< /afs/csail.mit.edu/u/a/adepalma/NFS/EEG-dataset/outboxYALE/Batch1/ynh_106_1_3_20140530T212748.edf
+< /afs/csail.mit.edu/u/a/adepalma/NFS/EEG-dataset/outboxYALE/Batch1/ynh_106_1_4_20140531T081851.edf
+1d0
+< /afs/csail.mit.edu/u/a/adepalma/NFS/EEG-dataset/outboxYALE/Batch4/ynh_58_4_3_20130915T001751.edf
+2a2,3
+> /afs/csail.mit.edu/u/a/adepalma/NFS/EEG-dataset/outboxYALE/Batch4/ynh_58_5_0_20130911T220258.edf
+> /afs/csail.mit.edu/u/a/adepalma/NFS/EEG-dataset/outboxYALE/Batch4/ynh_58_3_0_20130912T043103.edf
+11a13
+> /afs/csail.mit.edu/u/a/adepalma/NFS/EEG-dataset/outboxYALE/Batch4/ynh_58_4_3_20130915T001751.edf
+13,14d14
+< /afs/csail.mit.edu/u/a/adepalma/NFS/EEG-dataset/outboxYALE/Batch4/ynh_58_3_0_20130912T043103.edf
+< /afs/csail.mit.edu/u/a/adepalma/NFS/EEG-dataset/outboxYALE/Batch4/ynh_58_5_0_20130911T220258.edf
+3c3
+< /afs/csail.mit.edu/u/a/adepalma/NFS/EEG-dataset/outboxYALE/Batch3/ynh_25_2_0_20150116T173425.edf
+---
+> /afs/csail.mit.edu/u/a/adepalma/NFS/EEG-dataset/outboxYALE/Batch3/ynh_25_1_0_20150115T175839.edf
+4a5
+> /afs/csail.mit.edu/u/a/adepalma/NFS/EEG-dataset/outboxYALE/Batch3/ynh_25_1_1_20150115T204124.edf
+7,8d7
+< /afs/csail.mit.edu/u/a/adepalma/NFS/EEG-dataset/outboxYALE/Batch3/ynh_25_1_0_20150115T175839.edf
+< /afs/csail.mit.edu/u/a/adepalma/NFS/EEG-dataset/outboxYALE/Batch3/ynh_25_3_0_20150117T080025.edf
+10,12d8
+< /afs/csail.mit.edu/u/a/adepalma/NFS/EEG-dataset/outboxYALE/Batch3/ynh_25_4_0_20150116T080040.edf
+< /afs/csail.mit.edu/u/a/adepalma/NFS/EEG-dataset/outboxYALE/Batch3/ynh_25_1_1_20150115T204124.edf
+< /afs/csail.mit.edu/u/a/adepalma/NFS/EEG-dataset/outboxYALE/Batch3/ynh_25_2_1_20150117T042527.edf
+13a10
+> /afs/csail.mit.edu/u/a/adepalma/NFS/EEG-dataset/outboxYALE/Batch3/ynh_25_4_0_20150116T080040.edf
+14a12,14
+> /afs/csail.mit.edu/u/a/adepalma/NFS/EEG-dataset/outboxYALE/Batch3/ynh_25_2_0_20150116T173425.edf
+> /afs/csail.mit.edu/u/a/adepalma/NFS/EEG-dataset/outboxYALE/Batch3/ynh_25_2_1_20150117T042527.edf
+> /afs/csail.mit.edu/u/a/adepalma/NFS/EEG-dataset/outboxYALE/Batch3/ynh_25_3_0_20150117T080025.edf
+1,3d0
+< /afs/csail.mit.edu/u/a/adepalma/NFS/EEG-dataset/outboxYALE/Batch6/ynh_9_5_0_20140628T213521.edf
+< /afs/csail.mit.edu/u/a/adepalma/NFS/EEG-dataset/outboxYALE/Batch6/ynh_9_3_0_20140629T222320.edf
+< /afs/csail.mit.edu/u/a/adepalma/NFS/EEG-dataset/outboxYALE/Batch6/ynh_9_4_0_20140629T131826.edf
+5c2,3
+< /afs/csail.mit.edu/u/a/adepalma/NFS/EEG-dataset/outboxYALE/Batch6/ynh_9_1_0_20140629T075817.edf
+---
+> /afs/csail.mit.edu/u/a/adepalma/NFS/EEG-dataset/outboxYALE/Batch6/ynh_9_2_1_20140628T205242.edf
+> /afs/csail.mit.edu/u/a/adepalma/NFS/EEG-dataset/outboxYALE/Batch6/ynh_9_5_0_20140628T213521.edf
+6a5,6
+> /afs/csail.mit.edu/u/a/adepalma/NFS/EEG-dataset/outboxYALE/Batch6/ynh_9_1_0_20140629T075817.edf
+> /afs/csail.mit.edu/u/a/adepalma/NFS/EEG-dataset/outboxYALE/Batch6/ynh_9_4_0_20140629T131826.edf
+8c8
+< /afs/csail.mit.edu/u/a/adepalma/NFS/EEG-dataset/outboxYALE/Batch6/ynh_9_2_1_20140628T205242.edf
+---
+> /afs/csail.mit.edu/u/a/adepalma/NFS/EEG-dataset/outboxYALE/Batch6/ynh_9_3_0_20140629T222320.edf
+0a1,5
+> /afs/csail.mit.edu/u/a/adepalma/NFS/EEG-dataset/outboxYALE/Batch2/ynh_139_2_0_20150226T020836.edf
+> /afs/csail.mit.edu/u/a/adepalma/NFS/EEG-dataset/outboxYALE/Batch2/ynh_139_1_0_20150226T084200.edf
+> /afs/csail.mit.edu/u/a/adepalma/NFS/EEG-dataset/outboxYALE/Batch2/ynh_139_1_1_20150226T193302.edf
+> /afs/csail.mit.edu/u/a/adepalma/NFS/EEG-dataset/outboxYALE/Batch2/ynh_139_1_2_20150227T062405.edf
+> /afs/csail.mit.edu/u/a/adepalma/NFS/EEG-dataset/outboxYALE/Batch2/ynh_139_4_0_20150227T080124.edf
+6,10d10
+< /afs/csail.mit.edu/u/a/adepalma/NFS/EEG-dataset/outboxYALE/Batch2/ynh_139_1_0_20150226T084200.edf
+< /afs/csail.mit.edu/u/a/adepalma/NFS/EEG-dataset/outboxYALE/Batch2/ynh_139_1_1_20150226T193302.edf
+< /afs/csail.mit.edu/u/a/adepalma/NFS/EEG-dataset/outboxYALE/Batch2/ynh_139_4_0_20150227T080124.edf
+< /afs/csail.mit.edu/u/a/adepalma/NFS/EEG-dataset/outboxYALE/Batch2/ynh_139_2_0_20150226T020836.edf
+< /afs/csail.mit.edu/u/a/adepalma/NFS/EEG-dataset/outboxYALE/Batch2/ynh_139_1_2_20150227T062405.edf
+0a1,2
+> /afs/csail.mit.edu/u/a/adepalma/NFS/EEG-dataset/outboxYALE/Batch4/ynh_4_2_0_20131108T205306.edf
+> /afs/csail.mit.edu/u/a/adepalma/NFS/EEG-dataset/outboxYALE/Batch4/ynh_4_2_1_20131109T104626.edf
+4d5
+< /afs/csail.mit.edu/u/a/adepalma/NFS/EEG-dataset/outboxYALE/Batch4/ynh_4_2_0_20131108T205306.edf
+6d6
+< /afs/csail.mit.edu/u/a/adepalma/NFS/EEG-dataset/outboxYALE/Batch4/ynh_4_2_1_20131109T104626.edf
+0a1,4
+> /afs/csail.mit.edu/u/a/adepalma/NFS/EEG-dataset/outboxYALE/Batch3/ynh_28_7_0_20131026T035805.edf
+> /afs/csail.mit.edu/u/a/adepalma/NFS/EEG-dataset/outboxYALE/Batch3/ynh_28_2_0_20131026T080301.edf
+> /afs/csail.mit.edu/u/a/adepalma/NFS/EEG-dataset/outboxYALE/Batch3/ynh_28_2_1_20131026T132832.edf
+> /afs/csail.mit.edu/u/a/adepalma/NFS/EEG-dataset/outboxYALE/Batch3/ynh_28_2_2_20131026T185403.edf
+7,10d10
+< /afs/csail.mit.edu/u/a/adepalma/NFS/EEG-dataset/outboxYALE/Batch3/ynh_28_2_0_20131026T080301.edf
+< /afs/csail.mit.edu/u/a/adepalma/NFS/EEG-dataset/outboxYALE/Batch3/ynh_28_2_1_20131026T132832.edf
+< /afs/csail.mit.edu/u/a/adepalma/NFS/EEG-dataset/outboxYALE/Batch3/ynh_28_7_0_20131026T035805.edf
+< /afs/csail.mit.edu/u/a/adepalma/NFS/EEG-dataset/outboxYALE/Batch3/ynh_28_2_2_20131026T185403.edf
+1,3d0
+< /afs/csail.mit.edu/u/a/adepalma/NFS/EEG-dataset/outboxYALE/Batch2/ynh_128_9_0_20140318T080114.edf
+< /afs/csail.mit.edu/u/a/adepalma/NFS/EEG-dataset/outboxYALE/Batch2/ynh_128_4_0_20140322T080114.edf
+< /afs/csail.mit.edu/u/a/adepalma/NFS/EEG-dataset/outboxYALE/Batch2/ynh_128_2_0_20140321T085844.edf
+5,10d1
+< /afs/csail.mit.edu/u/a/adepalma/NFS/EEG-dataset/outboxYALE/Batch2/ynh_128_9_1_20140318T185216.edf
+< /afs/csail.mit.edu/u/a/adepalma/NFS/EEG-dataset/outboxYALE/Batch2/ynh_128_4_1_20140322T185216.edf
+< /afs/csail.mit.edu/u/a/adepalma/NFS/EEG-dataset/outboxYALE/Batch2/ynh_128_6_0_20140320T080138.edf
+< /afs/csail.mit.edu/u/a/adepalma/NFS/EEG-dataset/outboxYALE/Batch2/ynh_128_2_1_20140321T194946.edf
+< /afs/csail.mit.edu/u/a/adepalma/NFS/EEG-dataset/outboxYALE/Batch2/ynh_128_8_0_20140319T223312.edf
+< /afs/csail.mit.edu/u/a/adepalma/NFS/EEG-dataset/outboxYALE/Batch2/ynh_128_7_0_20140319T080116.edf
+11a3,4
+> /afs/csail.mit.edu/u/a/adepalma/NFS/EEG-dataset/outboxYALE/Batch2/ynh_128_9_0_20140318T080114.edf
+> /afs/csail.mit.edu/u/a/adepalma/NFS/EEG-dataset/outboxYALE/Batch2/ynh_128_9_1_20140318T185216.edf
+13c6,8
+< /afs/csail.mit.edu/u/a/adepalma/NFS/EEG-dataset/outboxYALE/Batch2/ynh_128_4_2_20140323T054319.edf
+---
+> /afs/csail.mit.edu/u/a/adepalma/NFS/EEG-dataset/outboxYALE/Batch2/ynh_128_7_0_20140319T080116.edf
+> /afs/csail.mit.edu/u/a/adepalma/NFS/EEG-dataset/outboxYALE/Batch2/ynh_128_8_0_20140319T223312.edf
+> /afs/csail.mit.edu/u/a/adepalma/NFS/EEG-dataset/outboxYALE/Batch2/ynh_128_6_0_20140320T080138.edf
+14a10,11
+> /afs/csail.mit.edu/u/a/adepalma/NFS/EEG-dataset/outboxYALE/Batch2/ynh_128_2_0_20140321T085844.edf
+> /afs/csail.mit.edu/u/a/adepalma/NFS/EEG-dataset/outboxYALE/Batch2/ynh_128_2_1_20140321T194946.edf
+15a13,15
+> /afs/csail.mit.edu/u/a/adepalma/NFS/EEG-dataset/outboxYALE/Batch2/ynh_128_4_0_20140322T080114.edf
+> /afs/csail.mit.edu/u/a/adepalma/NFS/EEG-dataset/outboxYALE/Batch2/ynh_128_4_1_20140322T185216.edf
+> /afs/csail.mit.edu/u/a/adepalma/NFS/EEG-dataset/outboxYALE/Batch2/ynh_128_4_2_20140323T054319.edf
+18d17
+< /afs/csail.mit.edu/u/a/adepalma/NFS/EEG-dataset/outboxYALE/Batch2/ynh_128_5_0_20140324T085002.edf
+19a19
+> /afs/csail.mit.edu/u/a/adepalma/NFS/EEG-dataset/outboxYALE/Batch2/ynh_128_5_0_20140324T085002.edf
+1d0
+< /afs/csail.mit.edu/u/a/adepalma/NFS/EEG-dataset/outboxYALE/Batch6/ynh_92_1_0_20131227T081502.edf
+3d1
+< /afs/csail.mit.edu/u/a/adepalma/NFS/EEG-dataset/outboxYALE/Batch6/ynh_92_1_1_20131227T190604.edf
+4a3,4
+> /afs/csail.mit.edu/u/a/adepalma/NFS/EEG-dataset/outboxYALE/Batch6/ynh_92_1_0_20131227T081502.edf
+> /afs/csail.mit.edu/u/a/adepalma/NFS/EEG-dataset/outboxYALE/Batch6/ynh_92_1_1_20131227T190604.edf
+2d1
+< /afs/csail.mit.edu/u/a/adepalma/NFS/EEG-dataset/outboxYALE/Batch2/ynh_146_1_0_20131107T083158.edf
+3a3
+> /afs/csail.mit.edu/u/a/adepalma/NFS/EEG-dataset/outboxYALE/Batch2/ynh_146_1_0_20131107T083158.edf
+0a1,2
+> /afs/csail.mit.edu/u/a/adepalma/NFS/EEG-dataset/outboxYALE/Batch6/ynh_65_1_0_20131115T232746.edf
+> /afs/csail.mit.edu/u/a/adepalma/NFS/EEG-dataset/outboxYALE/Batch5/ynh_65_1_1_20131116T045317.edf
+4d5
+< /afs/csail.mit.edu/u/a/adepalma/NFS/EEG-dataset/outboxYALE/Batch6/ynh_65_1_0_20131115T232746.edf
+6c7,8
+< /afs/csail.mit.edu/u/a/adepalma/NFS/EEG-dataset/outboxYALE/Batch5/ynh_65_1_1_20131116T045317.edf
+---
+> /afs/csail.mit.edu/u/a/adepalma/NFS/EEG-dataset/outboxYALE/Batch5/ynh_65_5_0_20131117T061237.edf
+> /afs/csail.mit.edu/u/a/adepalma/NFS/EEG-dataset/outboxYALE/Batch5/ynh_65_2_0_20131117T080258.edf
+8d9
+< /afs/csail.mit.edu/u/a/adepalma/NFS/EEG-dataset/outboxYALE/Batch5/ynh_65_7_0_20131118T080300.edf
+10,12d10
+< /afs/csail.mit.edu/u/a/adepalma/NFS/EEG-dataset/outboxYALE/Batch5/ynh_65_7_1_20131118T132831.edf
+< /afs/csail.mit.edu/u/a/adepalma/NFS/EEG-dataset/outboxYALE/Batch5/ynh_65_2_0_20131117T080258.edf
+< /afs/csail.mit.edu/u/a/adepalma/NFS/EEG-dataset/outboxYALE/Batch5/ynh_65_5_0_20131117T061237.edf
+13a12,13
+> /afs/csail.mit.edu/u/a/adepalma/NFS/EEG-dataset/outboxYALE/Batch5/ynh_65_7_0_20131118T080300.edf
+> /afs/csail.mit.edu/u/a/adepalma/NFS/EEG-dataset/outboxYALE/Batch5/ynh_65_7_1_20131118T132831.edf
+16d15
+< /afs/csail.mit.edu/u/a/adepalma/NFS/EEG-dataset/outboxYALE/Batch5/ynh_65_8_1_20140410T205146.edf
+17a17
+> /afs/csail.mit.edu/u/a/adepalma/NFS/EEG-dataset/outboxYALE/Batch5/ynh_65_8_1_20140410T205146.edf
+1,2d0
+< /afs/csail.mit.edu/u/a/adepalma/NFS/EEG-dataset/outboxYALE/Batch4/ynh_50_1_0_20150114T084338.edf
+< /afs/csail.mit.edu/u/a/adepalma/NFS/EEG-dataset/outboxYALE/Batch4/ynh_50_1_1_20150114T193440.edf
+4c2
+< /afs/csail.mit.edu/u/a/adepalma/NFS/EEG-dataset/outboxYALE/Batch4/ynh_50_4_0_20150115T080108.edf
+---
+> /afs/csail.mit.edu/u/a/adepalma/NFS/EEG-dataset/outboxYALE/Batch4/ynh_50_1_0_20150114T084338.edf
+5a4
+> /afs/csail.mit.edu/u/a/adepalma/NFS/EEG-dataset/outboxYALE/Batch4/ynh_50_1_1_20150114T193440.edf
+6a6
+> /afs/csail.mit.edu/u/a/adepalma/NFS/EEG-dataset/outboxYALE/Batch4/ynh_50_4_0_20150115T080108.edf
+1c1,3
+< /afs/csail.mit.edu/u/a/adepalma/NFS/EEG-dataset/outboxYALE/Batch5/ynh_86_1_1_20150130T104302.edf
+---
+> /afs/csail.mit.edu/u/a/adepalma/NFS/EEG-dataset/outboxYALE/Batch5/ynh_86_2_0_20150130T002740.edf
+> /afs/csail.mit.edu/u/a/adepalma/NFS/EEG-dataset/outboxYALE/Batch5/ynh_86_2_1_20150130T031025.edf
+> /afs/csail.mit.edu/u/a/adepalma/NFS/EEG-dataset/outboxYALE/Batch5/ynh_86_2_2_20150130T055311.edf
+3c5
+< /afs/csail.mit.edu/u/a/adepalma/NFS/EEG-dataset/outboxYALE/Batch5/ynh_86_4_0_20150131T080042.edf
+---
+> /afs/csail.mit.edu/u/a/adepalma/NFS/EEG-dataset/outboxYALE/Batch5/ynh_86_1_1_20150130T104302.edf
+5d6
+< /afs/csail.mit.edu/u/a/adepalma/NFS/EEG-dataset/outboxYALE/Batch5/ynh_86_4_1_20150131T104327.edf
+7d7
+< /afs/csail.mit.edu/u/a/adepalma/NFS/EEG-dataset/outboxYALE/Batch5/ynh_86_4_2_20150131T132613.edf
+9d8
+< /afs/csail.mit.edu/u/a/adepalma/NFS/EEG-dataset/outboxYALE/Batch5/ynh_86_4_3_20150131T160858.edf
+11,12d9
+< /afs/csail.mit.edu/u/a/adepalma/NFS/EEG-dataset/outboxYALE/Batch5/ynh_86_4_4_20150131T185144.edf
+< /afs/csail.mit.edu/u/a/adepalma/NFS/EEG-dataset/outboxYALE/Batch5/ynh_86_2_0_20150130T002740.edf
+14,15d10
+< /afs/csail.mit.edu/u/a/adepalma/NFS/EEG-dataset/outboxYALE/Batch5/ynh_86_4_5_20150131T213430.edf
+< /afs/csail.mit.edu/u/a/adepalma/NFS/EEG-dataset/outboxYALE/Batch5/ynh_86_2_1_20150130T031025.edf
+17,19d11
+< /afs/csail.mit.edu/u/a/adepalma/NFS/EEG-dataset/outboxYALE/Batch5/ynh_86_3_0_20150201T081546.edf
+< /afs/csail.mit.edu/u/a/adepalma/NFS/EEG-dataset/outboxYALE/Batch5/ynh_86_4_6_20150201T001715.edf
+< /afs/csail.mit.edu/u/a/adepalma/NFS/EEG-dataset/outboxYALE/Batch5/ynh_86_2_2_20150130T055311.edf
+21c13,19
+< /afs/csail.mit.edu/u/a/adepalma/NFS/EEG-dataset/outboxYALE/Batch5/ynh_86_3_1_20150201T105831.edf
+---
+> /afs/csail.mit.edu/u/a/adepalma/NFS/EEG-dataset/outboxYALE/Batch5/ynh_86_4_0_20150131T080042.edf
+> /afs/csail.mit.edu/u/a/adepalma/NFS/EEG-dataset/outboxYALE/Batch5/ynh_86_4_1_20150131T104327.edf
+> /afs/csail.mit.edu/u/a/adepalma/NFS/EEG-dataset/outboxYALE/Batch5/ynh_86_4_2_20150131T132613.edf
+> /afs/csail.mit.edu/u/a/adepalma/NFS/EEG-dataset/outboxYALE/Batch5/ynh_86_4_3_20150131T160858.edf
+> /afs/csail.mit.edu/u/a/adepalma/NFS/EEG-dataset/outboxYALE/Batch5/ynh_86_4_4_20150131T185144.edf
+> /afs/csail.mit.edu/u/a/adepalma/NFS/EEG-dataset/outboxYALE/Batch5/ynh_86_4_5_20150131T213430.edf
+> /afs/csail.mit.edu/u/a/adepalma/NFS/EEG-dataset/outboxYALE/Batch5/ynh_86_4_6_20150201T001715.edf
+22a21,22
+> /afs/csail.mit.edu/u/a/adepalma/NFS/EEG-dataset/outboxYALE/Batch5/ynh_86_3_0_20150201T081546.edf
+> /afs/csail.mit.edu/u/a/adepalma/NFS/EEG-dataset/outboxYALE/Batch5/ynh_86_3_1_20150201T105831.edf
+1d0
+< /afs/csail.mit.edu/u/a/adepalma/NFS/EEG-dataset/outboxYALE/Batch2/ynh_141_2_0_20141127T081956.edf
+2a2
+> /afs/csail.mit.edu/u/a/adepalma/NFS/EEG-dataset/outboxYALE/Batch2/ynh_141_2_0_20141127T081956.edf
+0a1
+> /afs/csail.mit.edu/u/a/adepalma/NFS/EEG-dataset/outboxYALE/Batch4/ynh_43_4_0_20140525T223409.edf
+2c3
+< /afs/csail.mit.edu/u/a/adepalma/NFS/EEG-dataset/outboxYALE/Batch4/ynh_43_6_0_20140527T081108.edf
+---
+> /afs/csail.mit.edu/u/a/adepalma/NFS/EEG-dataset/outboxYALE/Batch4/ynh_43_3_0_20140526T093441.edf
+4c5,6
+< /afs/csail.mit.edu/u/a/adepalma/NFS/EEG-dataset/outboxYALE/Batch4/ynh_43_1_0_20140529T002650.edf
+---
+> /afs/csail.mit.edu/u/a/adepalma/NFS/EEG-dataset/outboxYALE/Batch4/ynh_43_2_2_20140527T055955.edf
+> /afs/csail.mit.edu/u/a/adepalma/NFS/EEG-dataset/outboxYALE/Batch4/ynh_43_6_0_20140527T081108.edf
+5a8
+> /afs/csail.mit.edu/u/a/adepalma/NFS/EEG-dataset/outboxYALE/Batch4/ynh_43_6_2_20140528T055313.edf
+7,9c10
+< /afs/csail.mit.edu/u/a/adepalma/NFS/EEG-dataset/outboxYALE/Batch4/ynh_43_4_0_20140525T223409.edf
+< /afs/csail.mit.edu/u/a/adepalma/NFS/EEG-dataset/outboxYALE/Batch4/ynh_43_3_0_20140526T093441.edf
+< /afs/csail.mit.edu/u/a/adepalma/NFS/EEG-dataset/outboxYALE/Batch4/ynh_43_2_2_20140527T055955.edf
+---
+> /afs/csail.mit.edu/u/a/adepalma/NFS/EEG-dataset/outboxYALE/Batch4/ynh_43_1_0_20140529T002650.edf
+11d11
+< /afs/csail.mit.edu/u/a/adepalma/NFS/EEG-dataset/outboxYALE/Batch4/ynh_43_6_2_20140528T055313.edf
+1a2
+> /afs/csail.mit.edu/u/a/adepalma/NFS/EEG-dataset/outboxYALE/Batch1/ynh_117_8_0_20130826T033129.edf
+15d15
+< /afs/csail.mit.edu/u/a/adepalma/NFS/EEG-dataset/outboxYALE/Batch1/ynh_117_8_0_20130826T033129.edf
+1d0
+< /afs/csail.mit.edu/u/a/adepalma/NFS/EEG-dataset/outboxYALE/Batch5/ynh_71_1_0_20150516T080022.edf
+2a2
+> /afs/csail.mit.edu/u/a/adepalma/NFS/EEG-dataset/outboxYALE/Batch5/ynh_71_1_0_20150516T080022.edf
+1,2d0
+< /afs/csail.mit.edu/u/a/adepalma/NFS/EEG-dataset/outboxYALE/Batch2/ynh_152_4_0_20140915T080117.edf
+< /afs/csail.mit.edu/u/a/adepalma/NFS/EEG-dataset/outboxYALE/Batch2/ynh_152_1_0_20140915T080117.edf
+5,6d2
+< /afs/csail.mit.edu/u/a/adepalma/NFS/EEG-dataset/outboxYALE/Batch2/ynh_152_5_0_20140915T080117.edf
+< /afs/csail.mit.edu/u/a/adepalma/NFS/EEG-dataset/outboxYALE/Batch2/ynh_152_4_1_20140915T185219.edf
+8d3
+< /afs/csail.mit.edu/u/a/adepalma/NFS/EEG-dataset/outboxYALE/Batch2/ynh_152_3_0_20140916T080113.edf
+9a5,7
+> /afs/csail.mit.edu/u/a/adepalma/NFS/EEG-dataset/outboxYALE/Batch2/ynh_152_1_0_20140915T080117.edf
+> /afs/csail.mit.edu/u/a/adepalma/NFS/EEG-dataset/outboxYALE/Batch2/ynh_152_5_0_20140915T080117.edf
+> /afs/csail.mit.edu/u/a/adepalma/NFS/EEG-dataset/outboxYALE/Batch2/ynh_152_4_0_20140915T080117.edf
+10a9
+> /afs/csail.mit.edu/u/a/adepalma/NFS/EEG-dataset/outboxYALE/Batch2/ynh_152_4_1_20140915T185219.edf
+11a11
+> /afs/csail.mit.edu/u/a/adepalma/NFS/EEG-dataset/outboxYALE/Batch2/ynh_152_3_0_20140916T080113.edf
+1c1
+< /afs/csail.mit.edu/u/a/adepalma/NFS/EEG-dataset/outboxYALE/Batch2/ynh_125_3_0_20140310T004845.edf
+---
+> /afs/csail.mit.edu/u/a/adepalma/NFS/EEG-dataset/outboxYALE/Batch2/ynh_125_2_0_20140308T023454.edf
+3c3
+< /afs/csail.mit.edu/u/a/adepalma/NFS/EEG-dataset/outboxYALE/Batch2/ynh_125_3_1_20140310T113947.edf
+---
+> /afs/csail.mit.edu/u/a/adepalma/NFS/EEG-dataset/outboxYALE/Batch2/ynh_125_3_0_20140310T004845.edf
+5c5,6
+< /afs/csail.mit.edu/u/a/adepalma/NFS/EEG-dataset/outboxYALE/Batch2/ynh_125_3_2_20140310T223050.edf
+---
+> /afs/csail.mit.edu/u/a/adepalma/NFS/EEG-dataset/outboxYALE/Batch2/ynh_125_6_0_20140310T094022.edf
+> /afs/csail.mit.edu/u/a/adepalma/NFS/EEG-dataset/outboxYALE/Batch2/ynh_125_3_1_20140310T113947.edf
+7c8,9
+< /afs/csail.mit.edu/u/a/adepalma/NFS/EEG-dataset/outboxYALE/Batch2/ynh_125_3_3_20140311T092152.edf
+---
+> /afs/csail.mit.edu/u/a/adepalma/NFS/EEG-dataset/outboxYALE/Batch2/ynh_125_6_1_20140310T203124.edf
+> /afs/csail.mit.edu/u/a/adepalma/NFS/EEG-dataset/outboxYALE/Batch2/ynh_125_3_2_20140310T223050.edf
+9,10c11,13
+< /afs/csail.mit.edu/u/a/adepalma/NFS/EEG-dataset/outboxYALE/Batch2/ynh_125_3_4_20140311T201255.edf
+< /afs/csail.mit.edu/u/a/adepalma/NFS/EEG-dataset/outboxYALE/Batch2/ynh_125_6_0_20140310T094022.edf
+---
+> /afs/csail.mit.edu/u/a/adepalma/NFS/EEG-dataset/outboxYALE/Batch2/ynh_125_6_2_20140311T072227.edf
+> /afs/csail.mit.edu/u/a/adepalma/NFS/EEG-dataset/outboxYALE/Batch2/ynh_125_5_0_20140311T090936.edf
+> /afs/csail.mit.edu/u/a/adepalma/NFS/EEG-dataset/outboxYALE/Batch2/ynh_125_3_3_20140311T092152.edf
+12c15,16
+< /afs/csail.mit.edu/u/a/adepalma/NFS/EEG-dataset/outboxYALE/Batch2/ynh_125_3_5_20140312T070357.edf
+---
+> /afs/csail.mit.edu/u/a/adepalma/NFS/EEG-dataset/outboxYALE/Batch2/ynh_125_5_1_20140311T200038.edf
+> /afs/csail.mit.edu/u/a/adepalma/NFS/EEG-dataset/outboxYALE/Batch2/ynh_125_3_4_20140311T201255.edf
+14,15c18
+< /afs/csail.mit.edu/u/a/adepalma/NFS/EEG-dataset/outboxYALE/Batch2/ynh_125_6_1_20140310T203124.edf
+< /afs/csail.mit.edu/u/a/adepalma/NFS/EEG-dataset/outboxYALE/Batch2/ynh_125_5_0_20140311T090936.edf
+---
+> /afs/csail.mit.edu/u/a/adepalma/NFS/EEG-dataset/outboxYALE/Batch2/ynh_125_3_5_20140312T070357.edf
+17,19d19
+< /afs/csail.mit.edu/u/a/adepalma/NFS/EEG-dataset/outboxYALE/Batch2/ynh_125_6_2_20140311T072227.edf
+< /afs/csail.mit.edu/u/a/adepalma/NFS/EEG-dataset/outboxYALE/Batch2/ynh_125_5_1_20140311T200038.edf
+< /afs/csail.mit.edu/u/a/adepalma/NFS/EEG-dataset/outboxYALE/Batch2/ynh_125_2_0_20140308T023454.edf
+1,3d0
+< /afs/csail.mit.edu/u/a/adepalma/NFS/EEG-dataset/outboxYALE/Batch6/ynh_91_1_0_20131106T102625.edf
+< /afs/csail.mit.edu/u/a/adepalma/NFS/EEG-dataset/outboxYALE/Batch6/ynh_91_3_0_20131106T100502.edf
+< /afs/csail.mit.edu/u/a/adepalma/NFS/EEG-dataset/outboxYALE/Batch6/ynh_91_2_0_20131107T190155.edf
+5c2,3
+< /afs/csail.mit.edu/u/a/adepalma/NFS/EEG-dataset/outboxYALE/Batch6/ynh_91_4_0_20131107T084300.edf
+---
+> /afs/csail.mit.edu/u/a/adepalma/NFS/EEG-dataset/outboxYALE/Batch6/ynh_91_3_0_20131106T100502.edf
+> /afs/csail.mit.edu/u/a/adepalma/NFS/EEG-dataset/outboxYALE/Batch6/ynh_91_1_0_20131106T102625.edf
+6a5,6
+> /afs/csail.mit.edu/u/a/adepalma/NFS/EEG-dataset/outboxYALE/Batch6/ynh_91_4_0_20131107T084300.edf
+> /afs/csail.mit.edu/u/a/adepalma/NFS/EEG-dataset/outboxYALE/Batch6/ynh_91_2_0_20131107T190155.edf
+0a1
+> /afs/csail.mit.edu/u/a/adepalma/NFS/EEG-dataset/outboxYALE/Batch3/ynh_156_3_0_20140217T030837.edf
+3d3
+< /afs/csail.mit.edu/u/a/adepalma/NFS/EEG-dataset/outboxYALE/Batch3/ynh_156_3_0_20140217T030837.edf
+1d0
+< /afs/csail.mit.edu/u/a/adepalma/NFS/EEG-dataset/outboxYALE/Batch2/ynh_119_9_1_20150516T230231.edf
+32a32
+> /afs/csail.mit.edu/u/a/adepalma/NFS/EEG-dataset/outboxYALE/Batch2/ynh_119_9_1_20150516T230231.edf
+1,2d0
+< /afs/csail.mit.edu/u/a/adepalma/NFS/EEG-dataset/outboxYALE/Batch6/ynh_88_7_1_20150527T185125.edf
+< /afs/csail.mit.edu/u/a/adepalma/NFS/EEG-dataset/outboxYALE/Batch5/ynh_88_1_1_20150523T185124.edf
+5a4,5
+> /afs/csail.mit.edu/u/a/adepalma/NFS/EEG-dataset/outboxYALE/Batch6/ynh_88_11_0_20150523T120231.edf
+> /afs/csail.mit.edu/u/a/adepalma/NFS/EEG-dataset/outboxYALE/Batch5/ynh_88_1_1_20150523T185124.edf
+10d9
+< /afs/csail.mit.edu/u/a/adepalma/NFS/EEG-dataset/outboxYALE/Batch6/ynh_88_11_0_20150523T120231.edf
+15a15
+> /afs/csail.mit.edu/u/a/adepalma/NFS/EEG-dataset/outboxYALE/Batch6/ynh_88_7_1_20150527T185125.edf
+1d0
+< /afs/csail.mit.edu/u/a/adepalma/NFS/EEG-dataset/outboxYALE/Batch5/ynh_82_3_0_20150315T080017.edf
+2a2,3
+> /afs/csail.mit.edu/u/a/adepalma/NFS/EEG-dataset/outboxYALE/Batch5/ynh_82_2_1_20150315T074313.edf
+> /afs/csail.mit.edu/u/a/adepalma/NFS/EEG-dataset/outboxYALE/Batch5/ynh_82_3_0_20150315T080017.edf
+4,5d4
+< /afs/csail.mit.edu/u/a/adepalma/NFS/EEG-dataset/outboxYALE/Batch5/ynh_82_5_0_20150316T131324.edf
+< /afs/csail.mit.edu/u/a/adepalma/NFS/EEG-dataset/outboxYALE/Batch5/ynh_82_4_0_20150316T113127.edf
+7c6,7
+< /afs/csail.mit.edu/u/a/adepalma/NFS/EEG-dataset/outboxYALE/Batch5/ynh_82_5_1_20150316T155609.edf
+---
+> /afs/csail.mit.edu/u/a/adepalma/NFS/EEG-dataset/outboxYALE/Batch5/ynh_82_4_0_20150316T113127.edf
+> /afs/csail.mit.edu/u/a/adepalma/NFS/EEG-dataset/outboxYALE/Batch5/ynh_82_5_0_20150316T131324.edf
+9c9
+< /afs/csail.mit.edu/u/a/adepalma/NFS/EEG-dataset/outboxYALE/Batch5/ynh_82_2_1_20150315T074313.edf
+---
+> /afs/csail.mit.edu/u/a/adepalma/NFS/EEG-dataset/outboxYALE/Batch5/ynh_82_5_1_20150316T155609.edf
+2d1
+< /afs/csail.mit.edu/u/a/adepalma/NFS/EEG-dataset/outboxYALE/Batch3/ynh_23_2_0_20150408T080017.edf
+3a3
+> /afs/csail.mit.edu/u/a/adepalma/NFS/EEG-dataset/outboxYALE/Batch3/ynh_23_2_0_20150408T080017.edf
+1,4d0
+< /afs/csail.mit.edu/u/a/adepalma/NFS/EEG-dataset/outboxYALE/Batch3/ynh_24_4_0_20150416T080023.edf
+< /afs/csail.mit.edu/u/a/adepalma/NFS/EEG-dataset/outboxYALE/Batch3/ynh_24_6_0_20150418T080024.edf
+< /afs/csail.mit.edu/u/a/adepalma/NFS/EEG-dataset/outboxYALE/Batch3/ynh_24_5_0_20150419T080023.edf
+< /afs/csail.mit.edu/u/a/adepalma/NFS/EEG-dataset/outboxYALE/Batch3/ynh_24_2_0_20150417T135926.edf
+6,10d1
+< /afs/csail.mit.edu/u/a/adepalma/NFS/EEG-dataset/outboxYALE/Batch3/ynh_24_4_1_20150416T185125.edf
+< /afs/csail.mit.edu/u/a/adepalma/NFS/EEG-dataset/outboxYALE/Batch3/ynh_24_6_1_20150418T185126.edf
+< /afs/csail.mit.edu/u/a/adepalma/NFS/EEG-dataset/outboxYALE/Batch3/ynh_24_5_1_20150419T185125.edf
+< /afs/csail.mit.edu/u/a/adepalma/NFS/EEG-dataset/outboxYALE/Batch3/ynh_24_7_0_20150420T080023.edf
+< /afs/csail.mit.edu/u/a/adepalma/NFS/EEG-dataset/outboxYALE/Batch3/ynh_24_2_1_20150418T005028.edf
+12c3,4
+< /afs/csail.mit.edu/u/a/adepalma/NFS/EEG-dataset/outboxYALE/Batch3/ynh_24_1_0_20150417T080021.edf
+---
+> /afs/csail.mit.edu/u/a/adepalma/NFS/EEG-dataset/outboxYALE/Batch3/ynh_24_4_0_20150416T080023.edf
+> /afs/csail.mit.edu/u/a/adepalma/NFS/EEG-dataset/outboxYALE/Batch3/ynh_24_4_1_20150416T185125.edf
+13a6,10
+> /afs/csail.mit.edu/u/a/adepalma/NFS/EEG-dataset/outboxYALE/Batch3/ynh_24_1_0_20150417T080021.edf
+> /afs/csail.mit.edu/u/a/adepalma/NFS/EEG-dataset/outboxYALE/Batch3/ynh_24_2_0_20150417T135926.edf
+> /afs/csail.mit.edu/u/a/adepalma/NFS/EEG-dataset/outboxYALE/Batch3/ynh_24_2_1_20150418T005028.edf
+> /afs/csail.mit.edu/u/a/adepalma/NFS/EEG-dataset/outboxYALE/Batch3/ynh_24_6_0_20150418T080024.edf
+> /afs/csail.mit.edu/u/a/adepalma/NFS/EEG-dataset/outboxYALE/Batch3/ynh_24_6_1_20150418T185126.edf
+14a12,13
+> /afs/csail.mit.edu/u/a/adepalma/NFS/EEG-dataset/outboxYALE/Batch3/ynh_24_5_0_20150419T080023.edf
+> /afs/csail.mit.edu/u/a/adepalma/NFS/EEG-dataset/outboxYALE/Batch3/ynh_24_5_1_20150419T185125.edf
+15a15
+> /afs/csail.mit.edu/u/a/adepalma/NFS/EEG-dataset/outboxYALE/Batch3/ynh_24_7_0_20150420T080023.edf
+1a2,6
+> /afs/csail.mit.edu/u/a/adepalma/NFS/EEG-dataset/outboxYALE/Batch3/ynh_16_2_0_20141224T080026.edf
+> /afs/csail.mit.edu/u/a/adepalma/NFS/EEG-dataset/outboxYALE/Batch3/ynh_16_2_1_20141224T132557.edf
+> /afs/csail.mit.edu/u/a/adepalma/NFS/EEG-dataset/outboxYALE/Batch3/ynh_16_6_0_20141224T161302.edf
+> /afs/csail.mit.edu/u/a/adepalma/NFS/EEG-dataset/outboxYALE/Batch3/ynh_16_6_1_20141224T213833.edf
+> /afs/csail.mit.edu/u/a/adepalma/NFS/EEG-dataset/outboxYALE/Batch3/ynh_16_6_2_20141225T030404.edf
+4d8
+< /afs/csail.mit.edu/u/a/adepalma/NFS/EEG-dataset/outboxYALE/Batch3/ynh_16_6_0_20141224T161302.edf
+6,7d9
+< /afs/csail.mit.edu/u/a/adepalma/NFS/EEG-dataset/outboxYALE/Batch3/ynh_16_6_1_20141224T213833.edf
+< /afs/csail.mit.edu/u/a/adepalma/NFS/EEG-dataset/outboxYALE/Batch3/ynh_16_2_0_20141224T080026.edf
+9,10c11,14
+< /afs/csail.mit.edu/u/a/adepalma/NFS/EEG-dataset/outboxYALE/Batch3/ynh_16_6_2_20141225T030404.edf
+< /afs/csail.mit.edu/u/a/adepalma/NFS/EEG-dataset/outboxYALE/Batch3/ynh_16_12_0_20141227T000834.edf
+---
+> /afs/csail.mit.edu/u/a/adepalma/NFS/EEG-dataset/outboxYALE/Batch3/ynh_16_10_4_20141226T054240.edf
+> /afs/csail.mit.edu/u/a/adepalma/NFS/EEG-dataset/outboxYALE/Batch3/ynh_16_3_0_20141226T063000.edf
+> /afs/csail.mit.edu/u/a/adepalma/NFS/EEG-dataset/outboxYALE/Batch3/ynh_16_11_0_20141226T082818.edf
+> /afs/csail.mit.edu/u/a/adepalma/NFS/EEG-dataset/outboxYALE/Batch3/ynh_16_13_0_20141226T120532.edf
+13,16c17
+< /afs/csail.mit.edu/u/a/adepalma/NFS/EEG-dataset/outboxYALE/Batch3/ynh_16_13_0_20141226T120532.edf
+< /afs/csail.mit.edu/u/a/adepalma/NFS/EEG-dataset/outboxYALE/Batch3/ynh_16_1_0_20141227T080131.edf
+< /afs/csail.mit.edu/u/a/adepalma/NFS/EEG-dataset/outboxYALE/Batch3/ynh_16_2_1_20141224T132557.edf
+< /afs/csail.mit.edu/u/a/adepalma/NFS/EEG-dataset/outboxYALE/Batch3/ynh_16_11_0_20141226T082818.edf
+---
+> /afs/csail.mit.edu/u/a/adepalma/NFS/EEG-dataset/outboxYALE/Batch3/ynh_16_12_0_20141227T000834.edf
+18,19d18
+< /afs/csail.mit.edu/u/a/adepalma/NFS/EEG-dataset/outboxYALE/Batch3/ynh_16_10_4_20141226T054240.edf
+< /afs/csail.mit.edu/u/a/adepalma/NFS/EEG-dataset/outboxYALE/Batch3/ynh_16_3_0_20141226T063000.edf
+20a20
+> /afs/csail.mit.edu/u/a/adepalma/NFS/EEG-dataset/outboxYALE/Batch3/ynh_16_1_0_20141227T080131.edf
+1d0
+< /afs/csail.mit.edu/u/a/adepalma/NFS/EEG-dataset/outboxYALE/Batch5/ynh_85_1_7_20150315T025954.edf
+10a10
+> /afs/csail.mit.edu/u/a/adepalma/NFS/EEG-dataset/outboxYALE/Batch5/ynh_85_3_0_20150314T081110.edf
+12,19c12
+< /afs/csail.mit.edu/u/a/adepalma/NFS/EEG-dataset/outboxYALE/Batch5/ynh_85_1_2_20150314T132606.edf
+< /afs/csail.mit.edu/u/a/adepalma/NFS/EEG-dataset/outboxYALE/Batch5/ynh_85_1_3_20150314T160851.edf
+< /afs/csail.mit.edu/u/a/adepalma/NFS/EEG-dataset/outboxYALE/Batch5/ynh_85_1_4_20150314T185137.edf
+< /afs/csail.mit.edu/u/a/adepalma/NFS/EEG-dataset/outboxYALE/Batch5/ynh_85_1_5_20150314T213423.edf
+< /afs/csail.mit.edu/u/a/adepalma/NFS/EEG-dataset/outboxYALE/Batch5/ynh_85_1_6_20150315T001708.edf
+< /afs/csail.mit.edu/u/a/adepalma/NFS/EEG-dataset/outboxYALE/Batch5/ynh_85_4_0_20150315T052654.edf
+< /afs/csail.mit.edu/u/a/adepalma/NFS/EEG-dataset/outboxYALE/Batch5/ynh_85_5_0_20150315T080027.edf
+< /afs/csail.mit.edu/u/a/adepalma/NFS/EEG-dataset/outboxYALE/Batch5/ynh_85_5_1_20150315T104312.edf
+---
+> /afs/csail.mit.edu/u/a/adepalma/NFS/EEG-dataset/outboxYALE/Batch5/ynh_85_3_1_20150314T105355.edf
+20a14
+> /afs/csail.mit.edu/u/a/adepalma/NFS/EEG-dataset/outboxYALE/Batch5/ynh_85_1_2_20150314T132606.edf
+21a16
+> /afs/csail.mit.edu/u/a/adepalma/NFS/EEG-dataset/outboxYALE/Batch5/ynh_85_1_3_20150314T160851.edf
+22a18
+> /afs/csail.mit.edu/u/a/adepalma/NFS/EEG-dataset/outboxYALE/Batch5/ynh_85_1_4_20150314T185137.edf
+23a20
+> /afs/csail.mit.edu/u/a/adepalma/NFS/EEG-dataset/outboxYALE/Batch5/ynh_85_1_5_20150314T213423.edf
+24a22
+> /afs/csail.mit.edu/u/a/adepalma/NFS/EEG-dataset/outboxYALE/Batch5/ynh_85_1_6_20150315T001708.edf
+26c24
+< /afs/csail.mit.edu/u/a/adepalma/NFS/EEG-dataset/outboxYALE/Batch5/ynh_85_3_0_20150314T081110.edf
+---
+> /afs/csail.mit.edu/u/a/adepalma/NFS/EEG-dataset/outboxYALE/Batch5/ynh_85_1_7_20150315T025954.edf
+28c26
+< /afs/csail.mit.edu/u/a/adepalma/NFS/EEG-dataset/outboxYALE/Batch5/ynh_85_3_1_20150314T105355.edf
+---
+> /afs/csail.mit.edu/u/a/adepalma/NFS/EEG-dataset/outboxYALE/Batch5/ynh_85_4_0_20150315T052654.edf
+29a28,29
+> /afs/csail.mit.edu/u/a/adepalma/NFS/EEG-dataset/outboxYALE/Batch5/ynh_85_5_0_20150315T080027.edf
+> /afs/csail.mit.edu/u/a/adepalma/NFS/EEG-dataset/outboxYALE/Batch5/ynh_85_5_1_20150315T104312.edf
+7d6
+< /afs/csail.mit.edu/u/a/adepalma/NFS/EEG-dataset/outboxYALE/Batch6/ynh_96_2_0_20150325T080039.edf
+9d7
+< /afs/csail.mit.edu/u/a/adepalma/NFS/EEG-dataset/outboxYALE/Batch6/ynh_96_2_1_20150325T104324.edf
+10a9,10
+> /afs/csail.mit.edu/u/a/adepalma/NFS/EEG-dataset/outboxYALE/Batch6/ynh_96_2_0_20150325T080039.edf
+> /afs/csail.mit.edu/u/a/adepalma/NFS/EEG-dataset/outboxYALE/Batch6/ynh_96_2_1_20150325T104324.edf
