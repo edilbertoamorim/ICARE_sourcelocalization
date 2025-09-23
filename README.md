@@ -1,4 +1,4 @@
-# EEG Burst Source Localization Pipeline
+# EEG Source Reconstruction Pipeline
 
 WARNING : Pipeline in development. (Some scripts might not be optimized)
  
@@ -59,7 +59,7 @@ Source_localization/
 ### Step 1: Process Patients
 - Run A1_Source_localization.m to extract precise start and end times of detected bursts.  
 - **Input:** Source_localization_files/ICARE_patient_metadata.xlsx 
-- **Output:** Features Table saved in Data/OUTPUT/Source_Reconstruction/<PATIENT_ID>
+- **Output:** Features and PSDs saved in Data/OUTPUT/Source_Reconstruction/<PATIENT_ID>
 
 ### Step 2: Visualize Features
 - Run A2_Plot_Features.m to generate the features maps.  
@@ -75,7 +75,7 @@ Source_localization/
 - MATLAB (R2021b or newer)  
 - EEGLAB (included in eeglab2025.0.0/)  
 - FieldTrip (included in fieldtrip-20250106/)  
-- WFDB toolbox for Matlab (included in version 0.10 or later)  
+- WFDB toolbox for Matlab (version 0.10 or above)  
 
 ### Notes
 - For detailed explanation of parameters, check comments inside each .m file.

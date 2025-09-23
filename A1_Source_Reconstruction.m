@@ -56,7 +56,7 @@ baseDir = fileparts(mfilename('fullpath'));
 addpath(fullfile(baseDir, 'eeglab2025.0.0'));
 addpath(fullfile(baseDir, 'fieldtrip-20250106'));
 addpath(fullfile(baseDir, 'fieldtrip-20250106', 'external', 'eeglab'));
-addpath(fullfile(baseDir, 'wfdb-app-toolbox'))
+addpath(genpath(fullfile(baseDir, 'wfdb-app-toolbox')))
 addpath(genpath(fullfile(baseDir, 'Source_localization_files')));
 ft_defaults
 
@@ -65,7 +65,7 @@ patient_list = readtable(patient_table);
 job_id = unique(patient_list.Patient);
 
 
-% Run sourcelocalization
+%% Run sourcelocalization
 % Loop over each patient
 for i = 1:length(job_id)
 
@@ -80,7 +80,12 @@ for i = 1:length(job_id)
     
     dir_output = fullfile(dir_data, 'OUTPUT', 'Source_Reconstruction', pid);
 
-    Source_Reconstruction_DKA_MNI(patient_info, dir_output, max_time, VERBOSE);
+    try
+        Source_Reconstruction_DKA_MNI(patient_info, dir_output, max_time, VERBOSE);
+    catch ME
+        warning(ME.identifier, 'Process failed (%s)', ME.message);
+        disp(strcat("Problems with Patient : ", string(pid), " - Skipping..."))
+    end
 end
 
 disp("Complete")

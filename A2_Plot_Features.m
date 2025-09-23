@@ -77,7 +77,12 @@ for i = 1:length(job_id)
     
     dir_output = fullfile(dir_data, 'OUTPUT', 'Source_Reconstruction', pid);
 
-    plot_features(patient_info, dir_output, VERBOSE);
+    try
+        plot_features(patient_info, dir_output, VERBOSE);
+    catch ME
+        warning('Process failed (%s)', ME.message);
+        disp(strcat("Problems with Patient : ", string(pid), " - Skipping..."))
+    end
 end
 
 disp("Complete")

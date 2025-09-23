@@ -35,7 +35,7 @@ function Source_Reconstruction_DKA_MNI(patient_info, dir_output, max_min, plot_f
     % leadfield_file = fullfile('Source_localization_files', 'leadfield_output', 'leadfield_19elec.mat');
     % load(leadfield_file, 'LFmatrix', 'leadfield', 'inside_idx'); leadfdc = leadfield; insideix = inside_idx;
     leadfield_file = fullfile('Source_localization_files', 'MNI_DKA_Standard_Files.mat');
-    load(leadfield_file, 'LFmatrix', 'leadfdc', 'insideix', 'atlas');
+    load(leadfield_file, 'LFmatrix', 'leadfdc', 'insideix', 'atlas', 'labels');
 
     % --- Create output directories ---
     dir_out = fullfile(dir_output);
@@ -45,12 +45,16 @@ function Source_Reconstruction_DKA_MNI(patient_info, dir_output, max_min, plot_f
     dir_figs  = fullfile(dir_out, '04_FeaturePlots');
     cellfun(@(d) ~exist(d,'dir') && mkdir(d), {dir_table, dir_figs, dir_eegplot, dir_psd});
 
+    % --- Preapre data ---
     patient_ID = patient_info.Patient;
     time_from_ROSC = patient_info.ROSC;
     CPC = patient_info.CPC;
 
     % Get patient filenames from physionet
     [eegFiles, segments] = get_ICARE_EEG_files(patient_ID);
+
+    % Resume from last feature table produces if existent
+    [start_file_idx, p_start, last_seg, last_part] = get_resume_point(dir_table, patient_ID, segments);
 
     % --- Prepare ROI structure ---
     atlas.tissuelabel{10} = 'Third_Ventricle';
@@ -61,17 +65,25 @@ function Source_Reconstruction_DKA_MNI(patient_info, dir_output, max_min, plot_f
     % --- Build dummy source model to get voxels mask ---
     ROI_mask = get_ROI_mask(atlas, leadfdc, insideix, roi_list);     
 
-    for i_file = 1:length(eegFiles)
+    for i_file = start_file_idx:length(eegFiles)
         
         fprintf('File: %s  | Segment: %s\n', eegFiles{i_file}, segments{i_file});
     
         % Load EEG
         [signal, Fs, chanNames, utilityFreq, start_h, end_h] = ...
-            load_ICARE_EEG(patient_ID, segments{4+i_file});
+            load_ICARE_EEG(patient_ID, segments{i_file});
+
+        % Filter channels
+        [signal, chanNames] = filter_ch_labels(signal, chanNames, labels);
 
         % --- Convert start time to datetime ---
-        tStart = datetime(start_h, 'InputFormat', 'HH:mm:ss'); % start_h from load_ICARE_EEG
-        
+        % if strcmp(start_h(1:2), '24')
+        %     start_h = ['00' start_h(3:end)];  % replace 24 with 00
+        %     tStart = datetime(start_h, 'InputFormat', 'HH:mm:ss') + days(1);
+        % else
+        %     tStart = datetime(start_h, 'InputFormat', 'HH:mm:ss');
+        % end
+                
         % --- Segmenting EEG into chunks of psd_resolution minutes ---
         samplesPerSeg = psd_resolution * 60 * Fs;
         nSeg = floor(size(signal,1) / samplesPerSeg);
@@ -81,7 +93,7 @@ function Source_Reconstruction_DKA_MNI(patient_info, dir_output, max_min, plot_f
         if max_min
             max_nSeg = min(max_min, nSeg*psd_resolution); end
         
-        for s = 1:max_nSeg
+        for s = p_start:max_nSeg
             idxStart = (s-1)*samplesPerSeg + 1;
             idxEnd   = s*samplesPerSeg;
             

@@ -99,10 +99,10 @@ function plot_patient_features(patient_info, output_folder, plot_flag, unit)
         unique_segments = unique(T_feat.Segment);
 
         for s = 1:length(unique_segments)
-            seg = unique_segments(s);
+            seg = unique_segments{s};
 
             % Filter by this segment
-            rows_seg = (string(T_feat.Segment) == seg{s});
+            rows_seg = (string(T_feat.Segment) == seg);
             T_seg = T_feat(rows_seg, :);
 
             unique_parts = unique(T_seg.Part);
@@ -141,7 +141,7 @@ function plot_patient_features(patient_info, output_folder, plot_flag, unit)
 
                 % Title includes segment and part
                 title(sprintf('%s - %s | Segment: %s, Part: %d (%s)', ...
-                    patient_ID, feature, seg{s}, p, unit), ...
+                    patient_ID, feature, seg, p, unit), ...
                     'Interpreter', 'none');
 
                 % Colorbar
@@ -155,7 +155,7 @@ function plot_patient_features(patient_info, output_folder, plot_flag, unit)
 
                 %% Save figure
                 fig_name = sprintf('%s_Seg%s_Part%d_%s.png', ...
-                    patient_ID, seg{s}, p, feature);
+                    patient_ID, seg, p, feature);
                 saveas(gcf, fullfile(dir_plots, fig_name));
                 close(gcf);
             end
