@@ -4,9 +4,9 @@
 % Purpose of the code: Get patients IDs from I-CARE dataset in physionet
 %
 % Usage:
-%   Be sure to have wfdb-app-toolbox added to your path and internet connection
+%   Be sure to have wfdb-app-toolbox added (optional) to your path and internet connection
 %
-%   Run the script
+%   Run the script (from the scripts/ folder as working directory)
 %
 % As output an excel table will be saved in Source_licalization_files
 % The Patients can be filtered before storing (see end of this file)
@@ -92,5 +92,5 @@ filteredData = metaData(metaData.CPC == 1, :);
 
 
 % --- Step 5: Write metadata to Excel file ---
-writetable(filteredData, 'ICARE_patient_metadata.xlsx');
+writetable(filteredData, '../ICARE_patient_metadata.xlsx');
 fprintf('Metadata saved to ICARE_patient_metadata.xlsx\n');

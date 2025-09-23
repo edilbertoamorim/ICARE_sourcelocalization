@@ -1,10 +1,8 @@
-%% Source Reconstruction
+%% Features ROI Map Plot
 % Author: A.Faloppa
-% 1/09/2025
+% 1/08/2025
 %
-% Purpose of the code: Reconstruct Source Level time series (SBL-Beamforming)
-%
-% Usage:
+% Purpose of the code: Map features to DKA from patients EEG
 %
 %   Be sure to have the following toolboxes in the pipeline directory : 
 %           eeglab2025.0.0 
@@ -22,16 +20,17 @@
 % 
 %   Change the .xlm patient table filename if needed in 'patient_table'
 %
+%   Be sure to have the output from A1_Source_Reconstruction.m script
+%
 %   Run the script
 %
 % Input : 
 %   Patient table and IDs to process from I-CARE dataset
+%   Features tables in the Output folders per patient
 %
 % Output : 
 %   Located Data/OUTPUT/Source_Reconstruction:
-%       Patient_ID/01_EEGsegmentPlots : Figures of EEG segment processed 
-%       Patient_ID/02_SourcePSDs      : .mat file with PSDs per ROI for each segment 
-%       Patient_ID/03_FeaturesTables  : .xls files with Features computed per ROI
+%       Patient_ID/04_FeaturesPlots   : Figures of mapped features on Atlas  
 %
 % This code is an adaptation of previous work by 
 % G.Velasquez and running F.Jiang's CHAMPAGNE source localization algorithm 
@@ -42,8 +41,7 @@ clear; close all; clc;
 
 %% Configurable variables:
 patient_table = 'ICARE_patient_metadata';
-max_time = 10; % Maximum minutes to analyze per patient file
-VERBOSE = 0;   % Intermediate plot
+VERBOSE = 0; % Intermediate plot
 
 %% Default variables and allocations
 dir_data = './Data';
@@ -56,7 +54,6 @@ baseDir = fileparts(mfilename('fullpath'));
 addpath(fullfile(baseDir, 'eeglab2025.0.0'));
 addpath(fullfile(baseDir, 'fieldtrip-20250106'));
 addpath(fullfile(baseDir, 'fieldtrip-20250106', 'external', 'eeglab'));
-addpath(fullfile(baseDir, 'wfdb-app-toolbox'))
 addpath(genpath(fullfile(baseDir, 'Source_localization_files')));
 ft_defaults
 
@@ -80,7 +77,7 @@ for i = 1:length(job_id)
     
     dir_output = fullfile(dir_data, 'OUTPUT', 'Source_Reconstruction', pid);
 
-    Source_Reconstruction_DKA_MNI(patient_info, dir_output, max_time, VERBOSE);
+    plot_features(patient_info, dir_output, VERBOSE);
 end
 
 disp("Complete")

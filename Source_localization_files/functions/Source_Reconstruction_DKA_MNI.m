@@ -1,4 +1,4 @@
-function Source_Reconstruction_DKA_MNI(patient_info, dir_output, max_hr, plot_flag)
+function Source_Reconstruction_DKA_MNI(patient_info, dir_output, max_min, plot_flag)
 % SIGNAL_SOURCE_RECONSTRUCTION
 % Performs EEG source reconstruction on raw signals (hourly segmentation).
 % Runs Champagne, use Beamforming, PCA for dimensionality reduction, and
@@ -10,8 +10,8 @@ function Source_Reconstruction_DKA_MNI(patient_info, dir_output, max_hr, plot_fl
 %     Patient metadata from physionet.
 % dir_ouput : char
 %     Path to directory for output files.
-% max_hr : numeric
-%     Maximum number of hours to include in analysis.
+% max_min : numeric
+%     Maximum number of minutes to include in analysis for each file.
 % plot_flag : logical
 %     If true, plots intermidiate figures.
 %
@@ -23,11 +23,11 @@ function Source_Reconstruction_DKA_MNI(patient_info, dir_output, max_hr, plot_fl
 
     % --- Configurations ---
     % c.Reconstruction
-    champ_iter = 25;    %[Champagne iterations]
+    champ_iter = 15;    %[Champagne iterations]
     n_dir = 3;          %[Reconstruction directions (x,y,z)]
 
     % c.Spectral Analysis
-    epoch_length = 10;      %[s]
+    epoch_length = 5;      %[s]
     overlap = 0.5;          %[a.u.]
     psd_resolution = 1;    %[min] (Average psds over x minutes)
 
@@ -36,13 +36,12 @@ function Source_Reconstruction_DKA_MNI(patient_info, dir_output, max_hr, plot_fl
     % load(leadfield_file, 'LFmatrix', 'leadfield', 'inside_idx'); leadfdc = leadfield; insideix = inside_idx;
     leadfield_file = fullfile('Source_localization_files', 'MNI_DKA_Standard_Files.mat');
     load(leadfield_file, 'LFmatrix', 'leadfdc', 'insideix', 'atlas');
-    load('Source_localization_files/mri_data.mat', 'mri');
 
     % --- Create output directories ---
-    dir_out = fullfile(dir_output, 'Source_Reconstruction');
+    dir_out = fullfile(dir_output);
     dir_eegplot = fullfile(dir_out, '01_EEGsegmentPlots');
     dir_psd  = fullfile(dir_out, '02_SourcePSDs');
-    dir_table  = fullfile(dir_out, '03_FaturesTables');
+    dir_table  = fullfile(dir_out, '03_FeaturesTables');
     dir_figs  = fullfile(dir_out, '04_FeaturePlots');
     cellfun(@(d) ~exist(d,'dir') && mkdir(d), {dir_table, dir_figs, dir_eegplot, dir_psd});
 
@@ -53,98 +52,36 @@ function Source_Reconstruction_DKA_MNI(patient_info, dir_output, max_hr, plot_fl
     % Get patient filenames from physionet
     [eegFiles, segments] = get_ICARE_EEG_files(patient_ID);
 
-
     % --- Prepare ROI structure ---
     atlas.tissuelabel{10} = 'Third_Ventricle';
     atlas.tissuelabel{11} = 'Fourth_Ventricle';
     roi_list = strrep(atlas.tissuelabel(2:end), '-', '_');
     ROI_struct = cell2struct(cell(length(roi_list),1), roi_list);
 
-    % --- Build dummy source model ---
-    src_template.avg.pow = zeros(size(leadfdc.pos,1),1);  % N voxels
-    src_template.inside = insideix;
-    src_template.outside = find(~leadfdc.inside);
-    src_template.pos = leadfdc.pos;
-    src_template.method = 'average';
-
-    cfg = [];
-    cfg.parameter = 'tissue';
-    cfg.interpmethod = 'nearest';
-    atlas_on_source = ft_sourceinterpolate(cfg, atlas, src_template);
-
-    ROI_mask = struct();
-    for i = 2:length(roi_list)+1  % skip 'Other'
-        full_mask = atlas_on_source.tissue == i; 
-        ROI_mask.(roi_list{i-1}) = full_mask(insideix);  % select only the LF voxels
-    end
-
-    % % --- Build dummy HD source model ---
-    % src_template = [];
-    % src_template.dim      = leadfdc.dim;
-    % src_template.pos      = leadfdc.pos;
-    % src_template.inside   = insideix;
-    % src_template.outside  = find(leadfdc.inside==0);
-    % src_template.method   = 'average';
-    % powvec = nan(size(leadfdc.pos,1),1);
-    % powvec(insideix)=0;
-    % src_template.avg.pow = powvec;
-    % 
-    % cfg = [];
-    % cfg.downsample = 1;
-    % cfg.interpmethod = 'nearest';
-    % cfg.parameter    = 'pow';
-    % cfg.verbose  = 'no';   % disables most info prints
-    % atlas_on_source = ft_sourceinterpolate(cfg, src_template, mri);
-    % 
-    % % Interpolate atlas labels onto source grid
-    % cfg = [];
-    % cfg.interpmethod = 'nearest';
-    % cfg.parameter    = 'tissue';
-    % cfg.verbose  = 'no';   % disables most info prints
-    % source_model = ft_sourceinterpolate(cfg, atlas, atlas_on_source);
-    % 
-    % 
-    % % Plot voxel inside LF per ROI
-    % for r = 1:length(roi_list)
-    %     roi_name = roi_list{r};
-    % 
-    %     atlas_tmp = atlas_on_source;
-    %     atlas_tmp.pow(source_model.tissue == (r+1)) = 1;  % assign 1 for voxels in this ROI from source model
-    %     clim = [0 1];
-    % 
-    %     % plot
-    %     cfg = [];
-    %     cfg.method        = 'slice';
-    %     cfg.funparameter  = 'pow';
-    %     cfg.funcolormap   = 'plasma';
-    %     cfg.funcolorlim   = clim;
-    %     cfg.opacitylim    = [clim(1)*0.1, clim(2)];
-    %     cfg.opacitymap    = 'rampup';
-    %     cfg.maskparameter = 'pow'; % mask background
-    %     cfg.locationcoordinates = 'voxel';
-    %     cfg.crosshair     = 'yes';
-    %     cfg.verbose  = 'no';   % disables most info prints
-    %     figure; ft_sourceplot(cfg, atlas_tmp);
-    %     title(roi_name);
-    % end
-        
+    % --- Build dummy source model to get voxels mask ---
+    ROI_mask = get_ROI_mask(atlas, leadfdc, insideix, roi_list);     
 
     for i_file = 1:length(eegFiles)
         
         fprintf('File: %s  | Segment: %s\n', eegFiles{i_file}, segments{i_file});
     
         % Load EEG
-        [signal, fs, chanNames, utilityFreq, start_h, end_h] = ...
-            load_ICARE_EEG(patient_ID, segments{5});
+        [signal, Fs, chanNames, utilityFreq, start_h, end_h] = ...
+            load_ICARE_EEG(patient_ID, segments{4+i_file});
 
         % --- Convert start time to datetime ---
         tStart = datetime(start_h, 'InputFormat', 'HH:mm:ss'); % start_h from load_ICARE_EEG
         
         % --- Segmenting EEG into chunks of psd_resolution minutes ---
-        samplesPerSeg = psd_resolution * 60 * fs;
+        samplesPerSeg = psd_resolution * 60 * Fs;
         nSeg = floor(size(signal,1) / samplesPerSeg);
+
+        % If max_min set, process only max_min [minutes] 
+        % from the start of file
+        if max_min
+            max_nSeg = min(max_min, nSeg*psd_resolution); end
         
-        for s = 1:nSeg
+        for s = 1:max_nSeg
             idxStart = (s-1)*samplesPerSeg + 1;
             idxEnd   = s*samplesPerSeg;
             
@@ -152,22 +89,22 @@ function Source_Reconstruction_DKA_MNI(patient_info, dir_output, max_hr, plot_fl
             segSignal = signal(idxStart:idxEnd, :)';
             
             % Time vector for this segment (seconds)
-            tVec = (0:(size(segSignal,2)-1))/fs;
-            tVec_datetime = tStart + seconds(tVec);
-            hourVec = hours(tVec_datetime - tStart);
+            tVec = (0:(size(segSignal,2)-1))/Fs;
+            % tVec_datetime = tStart + seconds(tVec);
+            % hourVec = hours(tVec_datetime - tStart);
             
             % --- Convert to FieldTrip format ---
             data_fieldtrip = [];
             data_fieldtrip.trial{1} = segSignal;   % channels × samples
             data_fieldtrip.time{1}  = tVec;        % seconds
             data_fieldtrip.label    = chanNames;
-            data_fieldtrip.fsample  = fs;
+            data_fieldtrip.fsample  = Fs;
             
             % --- Optional: rename channels if needed ---
-            data_fieldtrip.label{1,8}  = 'T7'; % T3
-            data_fieldtrip.label{1,12} = 'T8'; % T4
-            data_fieldtrip.label{1,13} = 'P7'; % T5
-            data_fieldtrip.label{1,17} = 'P8'; % T6
+            % data_fieldtrip.label{1,8}  = 'T7'; % T3
+            % data_fieldtrip.label{1,12} = 'T8'; % T4
+            % data_fieldtrip.label{1,13} = 'P7'; % T5
+            % data_fieldtrip.label{1,17} = 'P8'; % T6
             
             % --- Save segment plot ---
             cfg = [];
@@ -175,7 +112,7 @@ function Source_Reconstruction_DKA_MNI(patient_info, dir_output, max_hr, plot_fl
             cfg.blocksize = tVec(end) - tVec(1);
             ft_databrowser(cfg, data_fieldtrip);
             
-            image_name_full = fullfile(dir_eegplot, sprintf('%s_segment_%d', patient_ID, s));
+            image_name_full = fullfile(dir_eegplot, sprintf('%s_EEG_%sp%d', patient_ID, segments{i_file}, s));
             ui_controls = findall(gcf, 'Type', 'uicontrol');
             delete(ui_controls);
             saveas(gcf, image_name_full, 'png');
@@ -198,6 +135,7 @@ function Source_Reconstruction_DKA_MNI(patient_info, dir_output, max_hr, plot_fl
             % gammainit=ones(n_dir,n_dir,n_voxels)*0.1;
             % [Gamma,s,w,cost,k,dGamma]=champagne_plain(Y,LFmatrix,sigu_init,champ_iter,gammainit,n_dir);
             
+            disp("Running Champagne...")
             [Gamma_y,~,~,~,~,Sigma_y] = champ_noise_up(Y, LFmatrix, sigu_init, champ_iter, n_dir, 0, plot_flag, 0, 2, 1, 1e-16);
             if plot_flag, close(figure(1)); end
 
@@ -213,7 +151,7 @@ function Source_Reconstruction_DKA_MNI(patient_info, dir_output, max_hr, plot_fl
             invSigmaY = pinv(Sigma_y);
             
             %% Loop through voxels
-            disp("Dimensionality Reductuction (PCA)")
+            disp("Dimensionality Reductuction (PCA)...")
             for v = 1:n_voxels
                 % - Extract the lead-field matrix for this voxel (grouped by orientation)
                 idx = [v, v + n_voxels, v + 2*n_voxels];   % indices for 3 orientations
@@ -236,7 +174,7 @@ function Source_Reconstruction_DKA_MNI(patient_info, dir_output, max_hr, plot_fl
             end
 
             %% Spectral Analysis
-            disp("Spectral Analysis")
+            disp("Spectral Analysis...")
             % Preallocate PSD storage
             % Using pwelch: output will be [n_freqs x n_voxels]
             % Compute PSD for the first voxel to get freq vector
@@ -288,74 +226,100 @@ function Source_Reconstruction_DKA_MNI(patient_info, dir_output, max_hr, plot_fl
             title('8 Random Voxel PSDs');
             grid on;
             hold off;
-            image_name =strcat(patient_ID,'_Hour_','_c', '_psd');
-            image_name_full = fullfile(dir_figs,image_name);
+            image_name =sprintf('%s_PSD_%sp%d', patient_ID, segments{i_file}, s);
+            image_name_full = fullfile(dir_psd,image_name);
             saveas(gcf,image_name_full,'png');
             close(figure(1));
-           
-            disp("\tCompute Features")
-            % % % Compute bandpowers for each voxel in decibel
-            %bp_delta = 10*log10(bandpower(voxel_ts', Fs, [1 4]));   % delta
-            %bp_theta = 10*log10(bandpower(voxel_ts', Fs, [4 8]));   % theta
-            bp_alpha = 10*log10(bandpower(voxel_ts', Fs, [8 13]));  % alpha
-            %bp_beta  = 10*log10(bandpower(voxel_ts', Fs, [13 30])); % beta
 
-        
-            feat=bp_alpha;
-            clim = [min(feat) max(feat)];
-            atlas_tmp = atlas_on_source;
-    
-            % Plot voxel inside LF per ROI
-            for r = 1:length(roi_list)
-                mask = ROI_mask.(roi_list{r});
-                atlas_tmp.pow(source_model.tissue == (r+1)) = mean(feat(mask));  % assign in this ROI from source model
-            end
-            % plot
-            cfg = [];
-            cfg.method        = 'slice';
-            cfg.funparameter  = 'pow';
-            cfg.funcolormap   = 'hot';
-            cfg.funcolorlim   = clim;
-            cfg.maskparameter = 'pow'; % mask background
-            cfg.locationcoordinates = 'voxel';
-            cfg.crosshair     = 'yes';
-            cfg.verbose  = 'no';   % disables most info prints
-            figure; ft_sourceplot(cfg, atlas_tmp);
-            title('Mean Alpha Power');
-            h = colorbar;
-            h.Label.String = 'Source Power [10log_{10}(\muV^2)]';   % Using TeX for μ
-            h.Label.Interpreter = 'tex'; 
-            image_name =strcat(patient_ID,'_Hour_',num2str(segment_hour),'_c', num2str(c), '_pwr_alpha');
-            image_name_full = fullfile(dir_figs,image_name);
-            saveas(gcf,image_name_full,'png');
-            close(figure(1));
+            %% Save average PSD per ROI
+            disp("Saving average PSD per ROI")
+
+            % Build a structure to save
+            PSD_data = struct();
+            PSD_data.patient_ID = patient_ID;
+            PSD_data.psd_resolution = psd_resolution;
+            PSD_data.CPC = CPC;
+            PSD_data.freqs = freqs;
+            PSD_data.ROI_psd = ROI_psd;
             
-            % 
-            % 
-            % 
-            % %%%%%%% ROI averaging
-            % pow = rInt.pow; pow(sm2.tissue==1)=0; % exclude 'Other'
-            % for i = 2:length(roi_list)+1
-            %     voxels = sm2.tissue==i;
-            %     m = nanmean(pow(voxels));
-            %     ROI_struct.(roi_list{i-1})(end+1,1) = m;
-            % end
-            % 
-            % %% Save results to Excel
-            % save_hourly_ROI(patient_ID, 'RawEEG', segment_hour, bursts_included, ROI_struct, dir_table);
-            % 
-            % %% Plot (optional)
-            % if plot_flag
-            %     cfg=[]; cfg.method='slice'; cfg.funparameter='pow';
-            %     % cfg.funcolorlim=[prctile(rInt.pow,0,"all"), prctile(rInt.pow,100,"all")];
-            %     cfg.funcolormap='plasma'; % cfg.opacitymap='rampup';
-            %     cfg.locationcoordinates='voxel'; cfg.ori='x'; cfg.crosshair='yes';
-            %     cfg.maskparameter = 'pow'; % mask background
-            %     figure; ft_sourceplot(cfg, rInt);
-            %     image_name = sprintf('%s_Hour_%d_signal_sourceplot.png', patient_ID, segment_hour);
-            %     saveas(gcf, fullfile(dir_figs, image_name));
-            %     close(gcf);
-            % end
+            % Save as .mat
+            mat_filename = fullfile(dir_psd, sprintf('%s_Seg%s_Part%d_ROI_PSD', patient_ID, segments{i_file}, s));
+            save(mat_filename, '-struct', 'PSD_data');
+            disp(['Saved ROI PSD data to: ', mat_filename]);
+            
+            %% Compute average bandpower per ROI
+            disp("Computing average features per ROI...")
+
+            % Compute bandpowers for each voxel in decibel 
+            bp_delta = 10*log10(bandpower(voxel_ts', Fs, [1 4])); % delta 
+            bp_theta = 10*log10(bandpower(voxel_ts', Fs, [4 8])); % theta 
+            bp_alpha = 10*log10(bandpower(voxel_ts', Fs, [8 13])); % alpha 
+            bp_beta = 10*log10(bandpower(voxel_ts', Fs, [13 30])); % beta
+            
+            % Preallocate a table
+            roi_names = fieldnames(ROI_psd);
+            
+            % Initialize storage for one row of feature summary
+            % Columns: [Patient | Feature_Name | Resolution | CPC | all ROIs...]
+            feature_list = {'Delta', 'Theta', 'Alpha', 'Beta'};
+            n_features = numel(feature_list);
+            n_rois = numel(roi_names);
+            
+            % Create an empty cell array to later convert to a table
+            data_out = cell(n_features, 4 + n_rois);
+            
+            % Compute bandpower for each ROI
+            for f_idx = 1:n_features
+                switch feature_list{f_idx}
+                    case 'Delta'
+                        bp_voxel = bp_delta;
+                        freq_band = [1 4];
+                    case 'Theta'
+                        bp_voxel = bp_theta;
+                        freq_band = [4 8];
+                    case 'Alpha'
+                        bp_voxel = bp_alpha;
+                        freq_band = [8 13];
+                    case 'Beta'
+                        bp_voxel = bp_beta;
+                        freq_band = [13 30];
+                end
+            
+                % Average by ROI
+                for r = 1:n_rois
+                    mask = ROI_mask.(roi_names{r});
+                    if any(mask)
+                        % Mean of bandpower over all voxels in ROI
+                        roi_bp(r) = mean(bp_voxel(mask));
+                    else
+                        roi_bp(r) = NaN;
+                    end
+                end
+            
+                % Fill the data_out row
+                data_out{f_idx,1} = patient_ID;           % Patient
+                data_out{f_idx,2} = segments{i_file};     % Segment
+                data_out{f_idx,3} = s;                    % Part 
+                data_out{f_idx,4} = feature_list{f_idx};  % Feature_Name
+                data_out{f_idx,5} = psd_resolution;       % Resolution
+                data_out{f_idx,6} = CPC;                  % CPC
+                
+                % ROI values start at column 7
+                for r = 1:n_rois
+                    data_out{f_idx,6+r} = roi_bp(r);      % ROI values
+                end
+            end
+            
+            % Convert to table
+            column_names = [{'Patient','Segment', 'Part', 'Feature_Name','Resolution','CPC'}, roi_names'];
+            T = cell2table(data_out, 'VariableNames', column_names);
+            
+            % Save to Excel
+            excel_filename = fullfile(dir_table, sprintf('%s_Seg%s_Part%d_ROI_Features', patient_ID, segments{i_file}, s));
+            writetable(T, excel_filename, "FileType", "spreadsheet");
+            
+            disp(['Saved ROI features to: ', excel_filename]);
+
         end
     end
 end
@@ -363,34 +327,34 @@ end
 
 %% --- Helper functions ---
 
-function tbl = load_burst_ranges(files, indices, t_rosc)
-    tbl = table();
-    for i = 1:length(indices)
-        T = readtable(fullfile(files(indices(i)).folder, files(indices(i)).name));
-        T{:,:} = T{:,:}/100 + t_rosc;
-        tbl = [tbl; T];
-    end
-    tbl.Properties.VariableNames = {'burst_start_index','burst_end_index'};
-end
+% function tbl = load_burst_ranges(files, indices, t_rosc)
+%     tbl = table();
+%     for i = 1:length(indices)
+%         T = readtable(fullfile(files(indices(i)).folder, files(indices(i)).name));
+%         T{:,:} = T{:,:}/100 + t_rosc;
+%         tbl = [tbl; T];
+%     end
+%     tbl.Properties.VariableNames = {'burst_start_index','burst_end_index'};
+% end
 
-function save_hourly_ROI(patient_ID, feature_name, segment_hour, bursts_included, ROI_struct, dir_csv)
-    roi_names = fieldnames(ROI_struct);
-    roi_data = nan(1,numel(roi_names));
-    for k = 1:numel(roi_names)
-        vals = ROI_struct.(roi_names{k});
-        if ~isempty(vals), roi_data(1,k) = vals(end); end
-    end
-    row_table = table({feature_name}, segment_hour, bursts_included, ...
-                      'VariableNames', {'FeatureName','Hour','Bursts_included'});
-    roi_table = array2table(roi_data, 'VariableNames', roi_names);
-    row_table = [row_table roi_table];
-    filename_base = fullfile(dir_csv, [char(patient_ID) '_Signal_ROIs.xlsx']);
-    if isfile(filename_base)
-        writetable(row_table, filename_base, 'WriteMode','append','WriteVariableNames',false);
-    else
-        writetable(row_table, filename_base);
-    end
-end
+% function save_hourly_ROI(patient_ID, feature_name, segment_hour, bursts_included, ROI_struct, dir_csv)
+%     roi_names = fieldnames(ROI_struct);
+%     roi_data = nan(1,numel(roi_names));
+%     for k = 1:numel(roi_names)
+%         vals = ROI_struct.(roi_names{k});
+%         if ~isempty(vals), roi_data(1,k) = vals(end); end
+%     end
+%     row_table = table({feature_name}, segment_hour, bursts_included, ...
+%                       'VariableNames', {'FeatureName','Hour','Bursts_included'});
+%     roi_table = array2table(roi_data, 'VariableNames', roi_names);
+%     row_table = [row_table roi_table];
+%     filename_base = fullfile(dir_csv, [char(patient_ID) '_Signal_ROIs.xlsx']);
+%     if isfile(filename_base)
+%         writetable(row_table, filename_base, 'WriteMode','append','WriteVariableNames',false);
+%     else
+%         writetable(row_table, filename_base);
+%     end
+% end
 
 function [eegFiles, segments] = get_ICARE_EEG_files(patientID)
 %GET_ICARE_EEG_FILES Fetch all EEG filenames for a given patient from PhysioNet.
