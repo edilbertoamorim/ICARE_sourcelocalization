@@ -28,14 +28,17 @@ function Source_Reconstruction_DKA_MNI(patient_info, dir_output, max_min, plot_f
 
     % c.Spectral Analysis
     epoch_length = 5;      %[s]
-    overlap = 0.5;          %[a.u.]
+    overlap = 0.5;         %[a.u.]
     psd_resolution = 1;    %[min] (Average psds over x minutes)
 
     % --- Load resources ---
-    % leadfield_file = fullfile('Source_localization_files', 'leadfield_output', 'leadfield_19elec.mat');
-    % load(leadfield_file, 'LFmatrix', 'leadfield', 'inside_idx'); leadfdc = leadfield; insideix = inside_idx;
-    leadfield_file = fullfile('Source_localization_files', 'MNI_DKA_Standard_Files.mat');
-    load(leadfield_file, 'LFmatrix', 'leadfdc', 'insideix', 'atlas', 'labels');
+    leadfield_file = fullfile('Source_localization_files', 'leadfield_output', 'leadfield_19elec.mat');
+    load(leadfield_file, 'LFmatrix', 'leadfield', 'inside_idx', 'elec_aligned'); 
+    leadfdc = leadfield; insideix = inside_idx; labels=elec_aligned.label;
+    load(fullfile('Source_localization_files', 'MNI_DKA_Standard_Files.mat'), 'atlas');
+
+    % leadfield_file = fullfile('Source_localization_files', 'MNI_DKA_Standard_Files.mat');
+    % load(leadfield_file, 'LFmatrix', 'leadfdc', 'insideix', 'atlas', 'labels');
 
     % --- Create output directories ---
     dir_out = fullfile(dir_output);
@@ -53,7 +56,7 @@ function Source_Reconstruction_DKA_MNI(patient_info, dir_output, max_min, plot_f
     % Get patient filenames from physionet
     [eegFiles, segments] = get_ICARE_EEG_files(patient_ID);
 
-    % Resume from last feature table produces if existent
+    % Resume from last feature table produced if existent
     [start_file_idx, p_start, last_seg, last_part] = get_resume_point(dir_table, patient_ID, segments);
 
     % --- Prepare ROI structure ---
@@ -208,19 +211,25 @@ function Source_Reconstruction_DKA_MNI(patient_info, dir_output, max_min, plot_f
             % roi_list: list of ROI names (excluding 'Other')
             % psd_voxels: [n_voxels x n_freqs] for the current patient
             ROI_psd = struct();
+
+            % Save needed info
+            ind_freq = freqs<utilityFreq;
+            freqs=freqs(ind_freq);
+            ROI_psd.freq=freqs;
+            ROI_psd.ROI_names=roi_list;
             
             for i = 1:length(roi_list)
                 mask = ROI_mask.(roi_list{i});
                 if any(mask)
-                    ROI_psd.(roi_list{i}) = mean(psd_voxels(mask,:),1);
+                    ROI_psd.(roi_list{i}) = mean(psd_voxels(mask,ind_freq),1);
                 else
-                    ROI_psd.(roi_list{i}) = nan(1,size(psd_voxels,2));
+                    ROI_psd.(roi_list{i}) = nan(1,length(ind_freq));
                 end
             end
 
           
             % --- Plot 10 random voxel PSDs ---
-            n_rand = 15;  % number of random PSDs to plot
+            n_rand = 10;  % number of random PSDs to plot
             n_voxels = size(psd_voxels, 1);
             
             % Random selection of voxel indices
@@ -231,11 +240,11 @@ function Source_Reconstruction_DKA_MNI(patient_info, dir_output, max_min, plot_f
             figure;
             hold on;
             for i = 1:length(rand_idx)
-                plot(freqs, 10*log10(psd_voxels(rand_idx(i),:)), 'LineWidth', 1.2);
+                plot(freqs, 10*log10(psd_voxels(rand_idx(i),ind_freq)), 'LineWidth', 1.2);
             end
             xlabel('Frequency (Hz)');
             ylabel('Power (dB)');
-            title('8 Random Voxel PSDs');
+            title('10 Random Voxel PSDs');
             grid on;
             hold off;
             image_name =sprintf('%s_PSD_%sp%d', patient_ID, segments{i_file}, s);
@@ -269,13 +278,11 @@ function Source_Reconstruction_DKA_MNI(patient_info, dir_output, max_min, plot_f
             bp_beta = 10*log10(bandpower(voxel_ts', Fs, [13 30])); % beta
             
             % Preallocate a table
-            roi_names = fieldnames(ROI_psd);
-            
             % Initialize storage for one row of feature summary
             % Columns: [Patient | Feature_Name | Resolution | CPC | all ROIs...]
             feature_list = {'Delta', 'Theta', 'Alpha', 'Beta'};
             n_features = numel(feature_list);
-            n_rois = numel(roi_names);
+            n_rois = numel(roi_list);
             
             % Create an empty cell array to later convert to a table
             data_out = cell(n_features, 4 + n_rois);
@@ -299,7 +306,7 @@ function Source_Reconstruction_DKA_MNI(patient_info, dir_output, max_min, plot_f
             
                 % Average by ROI
                 for r = 1:n_rois
-                    mask = ROI_mask.(roi_names{r});
+                    mask = ROI_mask.(roi_list{r});
                     if any(mask)
                         % Mean of bandpower over all voxels in ROI
                         roi_bp(r) = mean(bp_voxel(mask));
@@ -323,7 +330,7 @@ function Source_Reconstruction_DKA_MNI(patient_info, dir_output, max_min, plot_f
             end
             
             % Convert to table
-            column_names = [{'Patient','Segment', 'Part', 'Feature_Name','Resolution','CPC'}, roi_names'];
+            column_names = [{'Patient','Segment', 'Part', 'Feature_Name','Resolution','CPC'}, roi_list'];
             T = cell2table(data_out, 'VariableNames', column_names);
             
             % Save to Excel

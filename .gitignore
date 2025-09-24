@@ -1,8 +1,13 @@
 Data/
+Data/.DS_Store
+
 eeglab2025.0.0/
 fieldtrip-20250106/
 wfdb-app-toolbox/
 .DS_Store
-Data/.DS_Store
+
 Source_localization_files/ICARE_patient_metadata.xlsx
+Source_localization_files/Source_loc_time_ROSC_local.xlsx
+Source_localization_files/leadfield_output/
+
 

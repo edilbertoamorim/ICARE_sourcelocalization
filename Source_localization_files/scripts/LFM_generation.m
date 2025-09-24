@@ -2,8 +2,12 @@
 % Build Lead Field (Forward Model)
 % ================================
 % Author A.Faloppa 20/09/2025
+% This script generate a lead field forward model for source reconstruction
+% It might take from 5 to 15 minues depending on the resolution defined
 %
-% Input : mri data (manually loaded in 'mri')
+% Only fieldtrip tool is needed for this script
+%
+% Input : mri data (optionally manually loaded in 'mri' - fieldtrip format)
 % Output : File in output_dir
 
 clear; clc;
@@ -13,8 +17,8 @@ load(leadfield_file,  'mri');
 
 %% Parameters
 output_dir  = 'Source_localization_files/leadfield_output';
-grid_res    = 10;    % mm grid spacing
-inwardshift = -1.5;  % push source grid inward to avoid skull boundary
+grid_res    = 15;    % mm grid spacing
+inwardshift = -3;  % push source grid inward to avoid skull boundary
 normalizeLF = 'yes'; % normalize leadfield vectors
 
 if ~exist(output_dir, 'dir'); mkdir(output_dir); end
@@ -70,7 +74,7 @@ elec_aligned1 = ft_electroderealign(cfg);
 
 rot_deg     = [0, 0, -88];      % rotation around x, y, z in degrees
 scale_factor= [1.2 1.2 1.2];    % scale for x,y,z
-translation = [15 10 24];       % translation in mm
+translation = [20 10 26];       % translation in mm
 
 elec_aligned = transform_plot_electrodes(elec_aligned1, scalp_mesh, rot_deg, scale_factor, translation);
 
@@ -85,7 +89,8 @@ headmodel = ft_prepare_headmodel(cfg, segmented_mri);
 
 %% 6) Create source grid
 cfg = [];
-cfg.grid.resolution = grid_res;
+cfg.resolution = grid_res;
+cfg.method = 'basedonmri';    % explicitly specify method
 cfg.grid.unit = 'mm';
 cfg.mri = mri;
 cfg.inwardshift = inwardshift;
@@ -108,6 +113,9 @@ LFmatrix = cell2mat(leadfield.leadfield(inside_idx));
 
 fprintf('Leadfield size: %d sensors x %d columns\n', size(LFmatrix,1), size(LFmatrix,2));
 
+[LFmatrix, inside_idx] = remove_nan_voxels(LFmatrix, inside_idx);
+
+
 %% 8) Save
 save(fullfile(output_dir,'leadfield_19elec.mat'), ...
      'LFmatrix','leadfield','inside_idx','sourcemodel','headmodel','elec_aligned');
@@ -117,6 +125,7 @@ figure;
 ft_plot_headmodel(headmodel,'facealpha',0.1);
 hold on;
 ft_plot_mesh(sourcemodel.pos(inside_idx,:),'vertexcolor','g');
+ft_plot_mesh(sourcemodel.pos(removed_idx,:),'vertexcolor','r');
 ft_plot_sens(elec_aligned,'style','r*');
 title('19 EEG Electrodes, Headmodel, and Source Grid');
 axis equal;
@@ -168,4 +177,40 @@ end
 axis equal;
 title('Transformed Electrodes');
 
+end
+
+function [LFmatrix_clean, inside_idx_clean, removed_idx] = remove_nan_voxels(LFmatrix, inside_idx)
+%REMOVE_NAN_VOXELS Remove voxels with NaNs in the leadfield matrix
+%
+% Inputs:
+%   LFmatrix   - [Nsensors x (Nvox*3)] leadfield matrix
+%   inside_idx - indices of voxels inside the brain
+%
+% Outputs:
+%   LFmatrix_clean     - cleaned leadfield matrix
+%   inside_idx_clean   - corresponding cleaned inside_idx
+%   removed_idx        - indices of voxels that were removed (relative to inside_idx)
+
+Nsensors = size(LFmatrix, 1);
+Nvox = numel(inside_idx);
+
+% reshape to [Nsensors x 3 x Nvox] for voxel-wise handling
+LF3 = reshape(LFmatrix, Nsensors, 3, Nvox);
+
+% identify voxels with any NaNs
+bad_vox = any(any(isnan(LF3), 2), 1);
+
+fprintf('Removing %d voxels with NaNs from leadfield (out of %d)\n', sum(bad_vox), Nvox);
+
+% remove bad voxels
+LF3(:, :, bad_vox) = [];
+inside_idx_clean = inside_idx(~bad_vox);
+
+% indices of removed voxels relative to inside_idx
+removed_idx = inside_idx(bad_vox);
+
+% reshape back to [Nsensors x (Nvox*3)]
+LFmatrix_clean = reshape(LF3, Nsensors, []);
+
+fprintf('New leadfield size: %d sensors x %d columns\n', size(LFmatrix_clean,1), size(LFmatrix_clean,2));
 end
