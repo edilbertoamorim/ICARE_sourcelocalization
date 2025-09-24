@@ -74,7 +74,7 @@ function Source_Reconstruction_DKA_MNI(patient_info, dir_output, max_min, plot_f
     
         % Load EEG
         [signal, Fs, chanNames, utilityFreq, start_h, end_h] = ...
-            load_ICARE_EEG(patient_ID, segments{i_file});
+            load_ICARE_EEG(patient_ID, segments{5});
 
         % Filter channels
         [signal, chanNames] = filter_ch_labels(signal, chanNames, labels);
@@ -154,39 +154,80 @@ function Source_Reconstruction_DKA_MNI(patient_info, dir_output, max_min, plot_f
             [Gamma_y,~,~,~,~,Sigma_y] = champ_noise_up(Y, LFmatrix, sigu_init, champ_iter, n_dir, 0, plot_flag, 0, 2, 1, 1e-16);
             if plot_flag, close(figure(1)); end
 
-            %% Beamformer Source Reconstruction
-            n_voxels = size(LFmatrix,2)/n_dir;  % n_dir = number of orientations (usually 3)
-            n_sensors = size(LFmatrix,1);       % e.g., 19
-            n_samples = size(Y,2);              % number of time samples
+            %% Beamformer Source Reconstruction using Champagne Posterior
+            n_voxels  = size(LFmatrix, 2) / n_dir;  % n_dir = number of orientations (usually 3)
+            n_sensors = size(LFmatrix, 1);          % e.g., 19 sensors
+            n_samples = size(Y, 2);                 % number of time samples
             
-            % Preallocate final voxel time series (PCA-reduced)
-            voxel_ts = zeros(n_voxels, n_samples);
+            disp(['Number of voxels: ', num2str(n_voxels)]);
             
-            % Precompute inverse of noise covariance
-            invSigmaY = pinv(Sigma_y);
-            
-            %% Loop through voxels
-            disp("Dimensionality Reductuction (PCA)...")
+            % Build full block-diagonal Gamma (source prior covariance)
+            disp('Building block-diagonal Gamma...');
+            Gamma_blocks = cell(1, n_voxels);
             for v = 1:n_voxels
-                % - Extract the lead-field matrix for this voxel (grouped by orientation)
-                idx = [v, v + n_voxels, v + 2*n_voxels];   % indices for 3 orientations
-                Lv = LFmatrix(:, idx);                     % [n_sensors x n_dir]
-                
-                % - Compute beamformer weights for this voxel
-                denom = Lv' * invSigmaY * Lv;              % [n_dir x n_dir]
-                W_v = invSigmaY * Lv / denom;              % [n_sensors x n_dir]
-                
-                % - Reconstruct source time series for the 3 orientations
-                S_v = W_v' * Y;                            % [n_dir x n_samples]
-                
-                % - PCA to reduce 3 orientations → 1 component
-                % Center data across time
-                S_v = S_v - mean(S_v,2);
-                
-                % PCA using SVD
-                [U,~,~] = svd(S_v, 'econ');               % U: [n_dir x n_dir]
-                voxel_ts(v,:) = U(:,1)' * S_v;             % First PC: [1 x n_samples]
+                Gamma_blocks{v} = Gamma_y(:,:,v);  % 3x3 covariance for voxel v
             end
+            Gamma_full = blkdiag(Gamma_blocks{:});  % [3*n_voxels x 3*n_voxels]
+            
+            % Compute inverse noise covariance
+            invSigmaY = pinv(Sigma_y);  % Regularized inverse may be better for noisy data
+            
+            % Compute posterior mean of sources
+            % Formula: X_hat = Gamma * L' * inv(Sigma_y) * Y
+            disp('Computing posterior mean...');
+            X_hat = Gamma_full * LFmatrix' * invSigmaY * Y;  % [3*n_voxels x n_samples]
+            
+            % PCA reduction per voxel
+            disp('Reducing 3 orientations → 1 time series per voxel using PCA...');
+            voxel_ts = zeros(n_voxels, n_samples);  % final output: [n_voxels x n_samples]
+            
+            for v = 1:n_voxels
+                idx = (v-1)*n_dir + (1:n_dir);  % indices for the 3 orientations of voxel v
+                S_v = X_hat(idx, :);            % [3 x n_samples]
+                
+                % Center the data across time
+                S_v = S_v - mean(S_v, 2);
+            
+                % PCA using SVD
+                [U,~,~] = svd(S_v, 'econ');     % U: [3 x 3]
+                voxel_ts(v, :) = U(:,1)' * S_v; % Project onto first principal component
+            end
+            
+            disp('Source reconstruction complete');
+
+            % %% Beamformer Source Reconstruction
+            % n_voxels = size(LFmatrix,2)/n_dir;  % n_dir = number of orientations (usually 3)
+            % n_sensors = size(LFmatrix,1);       % e.g., 19
+            % n_samples = size(Y,2);              % number of time samples
+            % 
+            % % Preallocate final voxel time series (PCA-reduced)
+            % voxel_ts = zeros(n_voxels, n_samples);
+            % 
+            % % Precompute inverse of noise covariance
+            % invSigmaY = pinv(Sigma_y);
+            % 
+            % %% Loop through voxels
+            % disp("Dimensionality Reductuction (PCA)...")
+            % for v = 1:n_voxels
+            %     % - Extract the lead-field matrix for this voxel (grouped by orientation)
+            %     idx = [v, v + n_voxels, v + 2*n_voxels];   % indices for 3 orientations
+            %     Lv = LFmatrix(:, idx);                     % [n_sensors x n_dir]
+            % 
+            %     % - Compute beamformer weights for this voxel
+            %     denom = Lv' * invSigmaY * Lv;              % [n_dir x n_dir]
+            %     W_v = invSigmaY * Lv / denom;              % [n_sensors x n_dir]
+            % 
+            %     % - Reconstruct source time series for the 3 orientations
+            %     S_v = W_v' * Y;                            % [n_dir x n_samples]
+            % 
+            %     % - PCA to reduce 3 orientations → 1 component
+            %     % Center data across time
+            %     S_v = S_v - mean(S_v,2);
+            % 
+            %     % PCA using SVD
+            %     [U,~,~] = svd(S_v, 'econ');               % U: [n_dir x n_dir]
+            %     voxel_ts(v,:) = U(:,1)' * S_v;             % First PC: [1 x n_samples]
+            % end
 
             %% Spectral Analysis
             disp("Spectral Analysis...")

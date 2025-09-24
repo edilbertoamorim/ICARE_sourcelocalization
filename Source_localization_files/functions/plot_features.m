@@ -117,27 +117,56 @@ function plot_patient_features(patient_info, output_folder, plot_flag, unit)
                 mean_feat = mean(roi_values, 1);           % mean value per ROI
 
                 %% Prepare atlas for plotting
+
                 atlas_tmp = atlas_on_source;
                 for r = 1:length(roi_list)
                     atlas_tmp.pow(source_model.tissue == (r+1)) = mean_feat(r);
                 end
 
                 %% Determine color limits
-                clim = [nanmean(mean_feat)-1.5*nanstd(mean_feat) nanmean(mean_feat)+1.5*nanstd(mean_feat)];
-
+                atlas_tmp = atlas_on_source;
+                
+                for r = 1:length(roi_list)
+                    atlas_tmp.pow(source_model.tissue == (r+1)) = mean_feat(r);
+                end
+                
+                %% Determine symmetric color limits for dB
+                % Negative values are meaningful in dB, so use symmetric scaling around 0
+                max_abs_val = max(abs(mean_feat));    % strongest magnitude
+                clim = [-max_abs_val, max_abs_val];   % symmetric around zero
+                
+                %% Rename the parameter for FieldTrip (optional but recommended)
+                atlas_tmp.avg = atlas_tmp.pow;   % FieldTrip expects 'avg' for signed data
+                cfg_funparam = 'avg';
+                
                 %% Plot using FieldTrip
                 cfg = [];
-                cfg.method               = 'slice';
-                cfg.funparameter         = 'pow';
-                cfg.funcolormap          = 'hot';
-                cfg.funcolorlim          = clim;
-                cfg.maskparameter        = 'pow';
-                cfg.locationcoordinates  = 'voxel';
-                cfg.crosshair            = 'yes';
-                cfg.verbose              = 'no';
-
+                cfg.method              = 'slice';
+                cfg.funparameter        = cfg_funparam;
+                cfg.funcolormap         = 'jet';      % diverging colormap (better than 'plasma')
+                cfg.funcolorlim         = clim;       % symmetric limits
+                cfg.maskparameter       = [];         % don't hide negative values
+                cfg.locationcoordinates = 'voxel';
+                cfg.crosshair           = 'yes';
+                cfg.verbose             = 'no';
+                
                 figure;
                 ft_sourceplot(cfg, atlas_tmp);
+                % clim = [nanmean(mean_feat)-1.5*nanstd(mean_feat) nanmean(mean_feat)+1.5*nanstd(mean_feat)];
+                % 
+                % %% Plot using FieldTrip
+                % cfg = [];
+                % cfg.method               = 'slice';
+                % cfg.funparameter         = 'pow';
+                % cfg.funcolormap          = 'plasma';
+                % cfg.funcolorlim          = clim;
+                % cfg.maskparameter        = 'pow';
+                % cfg.locationcoordinates  = 'voxel';
+                % cfg.crosshair            = 'yes';
+                % cfg.verbose              = 'no';
+                % 
+                % figure;
+                % ft_sourceplot(cfg, atlas_tmp);
 
                 % Title includes segment and part
                 title(sprintf('%s - %s | Segment: %s, Part: %d (%s)', ...
