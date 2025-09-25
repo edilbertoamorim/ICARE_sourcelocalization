@@ -53,9 +53,9 @@ dir_data = './Data';
 baseDir = fileparts(mfilename('fullpath'));
 
 % Add desired subfolders to the path
-addpath(fullfile(baseDir, 'eeglab2025.0.0'));
+addpath(genpath(fullfile(baseDir, 'eeglab2025.0.0')));
 addpath(fullfile(baseDir, 'fieldtrip-20250106'));
-addpath(fullfile(baseDir, 'fieldtrip-20250106', 'external', 'eeglab'));
+% addpath(fullfile(baseDir, 'fieldtrip-20250106', 'external', 'eeglab'));
 addpath(genpath(fullfile(baseDir, 'wfdb-app-toolbox')))
 addpath(genpath(fullfile(baseDir, 'Source_localization_files')));
 ft_defaults

@@ -53,7 +53,7 @@ Source_localization/
 
 ### Step 0.2: Files Preparation
 - A standard Lead-field matrix is provided
-- The file scripts/LFgeneration.m allows personalised generation of forward models starting from individual MRI data in fieldtrip format. An atlas is also needed (sample DK Atlas provided)
+- The file scripts/LFM_generation.m allows personalised generation of forward models starting from individual MRI data in Fieldtrip format. An atlas is also needed (sample DK Atlas provided)
 - Run scripts/Get_patients_ID.m to generate the list of patients to process (this list can be filtered if needed)  
 
 ### Step 1: Process Patients
@@ -61,24 +61,25 @@ Source_localization/
 - **Input:** Source_localization_files/ICARE_patient_metadata.xlsx 
 - **Output:** Features and PSDs saved in Data/OUTPUT/Source_Reconstruction/<PATIENT_ID>
 
+> **Note:** If lead fields are not already generated, run LFM_generation.m using mri data and adapting the electrodes to the headmodel (manually) before Step 1.
+
 ### Step 2: Visualize Features
 - Run A2_Plot_Features.m to generate the features maps.  
 - Uses FieldTrip functions and standard pre-computed lead fields.  
 - **Input:** Features Table + MNI lead fields  
-- **Output:** Figures in Data/OUTPUT/Source_Reconstruction/<PATIENT_ID>/figures
+- **Output:** Figures in Data/OUTPUT/Source_Reconstruction/<PATIENT_ID>/04_figures
 - WARNING : Development...
-
-> **Note:** If lead fields are not already generated, run LFmgeneration.m using mri data and adapting the electrodes to the headmodel (manually) before Step 1.
 
 
 ### Dependencies
 - MATLAB (R2021b or newer)  
-- EEGLAB (included in eeglab2025.0.0/)  
-- FieldTrip (included in fieldtrip-20250106/)  
-- WFDB toolbox for Matlab (version 0.10 or above)  
+- EEGLAB (included in eeglab2025.0.0 - download: https://sccn.ucsd.edu/eeglab/download.php)  
+- FieldTrip (included in fieldtrip-20250106 - download: https://www.fieldtriptoolbox.org/download/)  
+- WFDB toolbox for Matlab (version 0.10 or above - https://github.com/ikarosilva/wfdb-app-toolbox?tab=readme-ov-file)  
 
 ### Notes
 - For detailed explanation of parameters, check comments inside each .m file.
+- The scripts **LFM_generation.m** and **Get_patient_IDs.m** are needed to create the resources needed in the main scripts 
 
 ## References
 

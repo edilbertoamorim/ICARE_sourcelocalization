@@ -122,13 +122,6 @@ function plot_patient_features(patient_info, output_folder, plot_flag, unit)
                 for r = 1:length(roi_list)
                     atlas_tmp.pow(source_model.tissue == (r+1)) = mean_feat(r);
                 end
-
-                %% Determine color limits
-                atlas_tmp = atlas_on_source;
-                
-                for r = 1:length(roi_list)
-                    atlas_tmp.pow(source_model.tissue == (r+1)) = mean_feat(r);
-                end
                 
                 %% Determine symmetric color limits for dB
                 % Negative values are meaningful in dB, so use symmetric scaling around 0
@@ -150,7 +143,8 @@ function plot_patient_features(patient_info, output_folder, plot_flag, unit)
                 cfg.crosshair           = 'yes';
                 cfg.verbose             = 'no';
                 
-                figure;
+                % figure;
+                fig = figure('Visible','off');
                 ft_sourceplot(cfg, atlas_tmp);
                 % clim = [nanmean(mean_feat)-1.5*nanstd(mean_feat) nanmean(mean_feat)+1.5*nanstd(mean_feat)];
                 % 

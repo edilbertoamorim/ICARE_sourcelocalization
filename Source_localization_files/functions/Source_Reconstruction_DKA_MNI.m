@@ -22,6 +22,10 @@ function Source_Reconstruction_DKA_MNI(patient_info, dir_output, max_min, plot_f
     %ft_defaults
 
     % --- Configurations ---
+    % c.Preprocessing
+    F_interpolation = 100;
+    heavy_artifact_rej = false;
+
     % c.Reconstruction
     champ_iter = 15;    %[Champagne iterations]
     n_dir = 3;          %[Reconstruction directions (x,y,z)]
@@ -72,11 +76,11 @@ function Source_Reconstruction_DKA_MNI(patient_info, dir_output, max_min, plot_f
         
         fprintf('File: %s  | Segment: %s\n', eegFiles{i_file}, segments{i_file});
     
-        % Load EEG
-        [signal, Fs, chanNames, utilityFreq, start_h, end_h] = ...
-            load_ICARE_EEG(patient_ID, segments{5});
+        % Load EEG (supposed in microvolts)
+        [signal, Fs_acquisition, chanNames, utilityFreq, start_h, end_h] = ...
+            load_ICARE_EEG(patient_ID, segments{i_file});
 
-        % Filter channels
+        % Sort and drop channels labels
         [signal, chanNames] = filter_ch_labels(signal, chanNames, labels);
 
         % --- Convert start time to datetime ---
@@ -88,299 +92,291 @@ function Source_Reconstruction_DKA_MNI(patient_info, dir_output, max_min, plot_f
         % end
                 
         % --- Segmenting EEG into chunks of psd_resolution minutes ---
-        samplesPerSeg = psd_resolution * 60 * Fs;
+        samplesPerSeg = psd_resolution * 60 * Fs_acquisition;
         nSeg = floor(size(signal,1) / samplesPerSeg);
 
-        % If max_min set, process only max_min [minutes] 
-        % from the start of file
+        % If max_min set, process only max_min [minutes] from the start of file
         if max_min
             max_nSeg = min(max_min, nSeg*psd_resolution); end
-        
-        for s = p_start:max_nSeg
-            idxStart = (s-1)*samplesPerSeg + 1;
-            idxEnd   = s*samplesPerSeg;
-            
-            % Extract segment
-            segSignal = signal(idxStart:idxEnd, :)';
-            
-            % Time vector for this segment (seconds)
-            tVec = (0:(size(segSignal,2)-1))/Fs;
-            % tVec_datetime = tStart + seconds(tVec);
-            % hourVec = hours(tVec_datetime - tStart);
-            
-            % --- Convert to FieldTrip format ---
-            data_fieldtrip = [];
-            data_fieldtrip.trial{1} = segSignal;   % channels × samples
-            data_fieldtrip.time{1}  = tVec;        % seconds
-            data_fieldtrip.label    = chanNames;
-            data_fieldtrip.fsample  = Fs;
-            
-            % --- Optional: rename channels if needed ---
-            % data_fieldtrip.label{1,8}  = 'T7'; % T3
-            % data_fieldtrip.label{1,12} = 'T8'; % T4
-            % data_fieldtrip.label{1,13} = 'P7'; % T5
-            % data_fieldtrip.label{1,17} = 'P8'; % T6
-            
-            % --- Save segment plot ---
-            cfg = [];
-            cfg.viewmode = 'vertical';
-            cfg.blocksize = tVec(end) - tVec(1);
-            ft_databrowser(cfg, data_fieldtrip);
-            
-            image_name_full = fullfile(dir_eegplot, sprintf('%s_EEG_%sp%d', patient_ID, segments{i_file}, s));
-            ui_controls = findall(gcf, 'Type', 'uicontrol');
-            delete(ui_controls);
-            saveas(gcf, image_name_full, 'png');
-            close(figure(1)); 
+               
+            for s = p_start:max_nSeg
 
-            %% === Run Champagne ===
-            Y = segSignal; % channels x samples
-            sigu_init = norm(Y*Y')*eye(size(Y',2))*1e-6;
+              try 
 
-            % [n_sensors, total_cols] = size(LFmatrix);
-            % n_voxels = total_cols / 3;
-            % 
-            % % Preallocate interleaved leadfield
-            % LF_interleaved = zeros(n_sensors, total_cols);
-            % 
-            % % Reorder from grouped -> interleaved
-            % for v = 1:n_voxels
-            %     LF_interleaved(:, (v-1)*3 + (1:3)) = LFmatrix(:, [v, v + n_voxels, v + 2*n_voxels]);
-            % end
-            % gammainit=ones(n_dir,n_dir,n_voxels)*0.1;
-            % [Gamma,s,w,cost,k,dGamma]=champagne_plain(Y,LFmatrix,sigu_init,champ_iter,gammainit,n_dir);
-            
-            disp("Running Champagne...")
-            [Gamma_y,~,~,~,~,Sigma_y] = champ_noise_up(Y, LFmatrix, sigu_init, champ_iter, n_dir, 0, plot_flag, 0, 2, 1, 1e-16);
-            if plot_flag, close(figure(1)); end
-
-            %% Beamformer Source Reconstruction using Champagne Posterior
-            n_voxels  = size(LFmatrix, 2) / n_dir;  % n_dir = number of orientations (usually 3)
-            n_sensors = size(LFmatrix, 1);          % e.g., 19 sensors
-            n_samples = size(Y, 2);                 % number of time samples
-            
-            disp(['Number of voxels: ', num2str(n_voxels)]);
-            
-            % Build full block-diagonal Gamma (source prior covariance)
-            disp('Building block-diagonal Gamma...');
-            Gamma_blocks = cell(1, n_voxels);
-            for v = 1:n_voxels
-                Gamma_blocks{v} = Gamma_y(:,:,v);  % 3x3 covariance for voxel v
-            end
-            Gamma_full = blkdiag(Gamma_blocks{:});  % [3*n_voxels x 3*n_voxels]
-            
-            % Compute inverse noise covariance
-            invSigmaY = pinv(Sigma_y);  % Regularized inverse may be better for noisy data
-            
-            % Compute posterior mean of sources
-            % Formula: X_hat = Gamma * L' * inv(Sigma_y) * Y
-            disp('Computing posterior mean...');
-            X_hat = Gamma_full * LFmatrix' * invSigmaY * Y;  % [3*n_voxels x n_samples]
-            
-            % PCA reduction per voxel
-            disp('Reducing 3 orientations → 1 time series per voxel using PCA...');
-            voxel_ts = zeros(n_voxels, n_samples);  % final output: [n_voxels x n_samples]
-            
-            for v = 1:n_voxels
-                idx = (v-1)*n_dir + (1:n_dir);  % indices for the 3 orientations of voxel v
-                S_v = X_hat(idx, :);            % [3 x n_samples]
+    
+                idxStart = (s-1)*samplesPerSeg + 1;
+                idxEnd   = s*samplesPerSeg;
                 
-                % Center the data across time
-                S_v = S_v - mean(S_v, 2);
+                % Extract segment
+                segSignal = signal(idxStart:idxEnd, :)';
+                
+                % Time vector for this segment (seconds)
+                % tVec = (0:(size(segSignal,2)-1))/Fs;
+                % tVec_datetime = tStart + seconds(tVec);
+                % hourVec = hours(tVec_datetime - tStart);
             
-                % PCA using SVD
-                [U,~,~] = svd(S_v, 'econ');     % U: [3 x 3]
-                voxel_ts(v, :) = U(:,1)' * S_v; % Project onto first principal component
-            end
-            
-            disp('Source reconstruction complete');
-
-            % %% Beamformer Source Reconstruction
-            % n_voxels = size(LFmatrix,2)/n_dir;  % n_dir = number of orientations (usually 3)
-            % n_sensors = size(LFmatrix,1);       % e.g., 19
-            % n_samples = size(Y,2);              % number of time samples
-            % 
-            % % Preallocate final voxel time series (PCA-reduced)
-            % voxel_ts = zeros(n_voxels, n_samples);
-            % 
-            % % Precompute inverse of noise covariance
-            % invSigmaY = pinv(Sigma_y);
-            % 
-            % %% Loop through voxels
-            % disp("Dimensionality Reductuction (PCA)...")
-            % for v = 1:n_voxels
-            %     % - Extract the lead-field matrix for this voxel (grouped by orientation)
-            %     idx = [v, v + n_voxels, v + 2*n_voxels];   % indices for 3 orientations
-            %     Lv = LFmatrix(:, idx);                     % [n_sensors x n_dir]
-            % 
-            %     % - Compute beamformer weights for this voxel
-            %     denom = Lv' * invSigmaY * Lv;              % [n_dir x n_dir]
-            %     W_v = invSigmaY * Lv / denom;              % [n_sensors x n_dir]
-            % 
-            %     % - Reconstruct source time series for the 3 orientations
-            %     S_v = W_v' * Y;                            % [n_dir x n_samples]
-            % 
-            %     % - PCA to reduce 3 orientations → 1 component
-            %     % Center data across time
-            %     S_v = S_v - mean(S_v,2);
-            % 
-            %     % PCA using SVD
-            %     [U,~,~] = svd(S_v, 'econ');               % U: [n_dir x n_dir]
-            %     voxel_ts(v,:) = U(:,1)' * S_v;             % First PC: [1 x n_samples]
-            % end
-
-            %% Spectral Analysis
-            disp("Spectral Analysis...")
-            % Preallocate PSD storage
-            % Using pwelch: output will be [n_freqs x n_voxels]
-            % Compute PSD for the first voxel to get freq vector
-            n_samples_epoch = epoch_length * Fs;
-            n_overlap = floor(n_samples_epoch * overlap);
-            [pxx,freqs] = pwelch(voxel_ts(1,:), n_samples_epoch, n_overlap, n_samples_epoch, Fs);
-            n_freqs = length(freqs);
-            psd_voxels = zeros(n_voxels, n_freqs);
-            psd_voxels(1,:) = pxx';
-            
-            % Compute PSD for all voxels
-            for v = 2:n_voxels
-                [pxx,~] = pwelch(voxel_ts(v,:), n_samples_epoch, n_overlap, n_samples_epoch, Fs);
-                psd_voxels(v,:) = pxx';
-            end
-            
-            % Average PSD per ROI
-            % atlas.tissue: voxel-to-ROI mapping
-            % roi_list: list of ROI names (excluding 'Other')
-            % psd_voxels: [n_voxels x n_freqs] for the current patient
-            ROI_psd = struct();
-
-            % Save needed info
-            ind_freq = freqs<utilityFreq;
-            freqs=freqs(ind_freq);
-            ROI_psd.freq=freqs;
-            ROI_psd.ROI_names=roi_list;
-            
-            for i = 1:length(roi_list)
-                mask = ROI_mask.(roi_list{i});
-                if any(mask)
-                    ROI_psd.(roi_list{i}) = mean(psd_voxels(mask,ind_freq),1);
-                else
-                    ROI_psd.(roi_list{i}) = nan(1,length(ind_freq));
+                % Preprocess
+                [segSignal_clean, tVec_clean, Fs, n_bad_interp] = preprocess_eeg_segment(segSignal, chanNames, Fs_acquisition, ...
+                    'Bandpass', [0.5 45], ...
+                    'Downsample', F_interpolation, ...
+                    'BadThresh', 5, ...
+                    'useDipoleFit', heavy_artifact_rej, ...
+                    'LineFreq', utilityFreq);
+                
+                fprintf('Segment %d processed. Bad channels interpolated: %d\n', s, n_bad_interp);
+    
+                if n_bad_interp > 5
+                    % Skip further processing for segments with too many bad channels
+                    fprintf('Skipping segment %d due to excessive bad channels.\n', s);
+                    continue;
                 end
-            end
 
-          
-            % --- Plot 10 random voxel PSDs ---
-            n_rand = 10;  % number of random PSDs to plot
-            n_voxels = size(psd_voxels, 1);
-            
-            % Random selection of voxel indices
-            %rng('shuffle');  % ensures different random picks each run
-            rand_idx = randperm(n_voxels, min(n_rand, n_voxels));
-            
-            % Plot
-            figure;
-            hold on;
-            for i = 1:length(rand_idx)
-                plot(freqs, 10*log10(psd_voxels(rand_idx(i),ind_freq)), 'LineWidth', 1.2);
-            end
-            xlabel('Frequency (Hz)');
-            ylabel('Power (dB)');
-            title('10 Random Voxel PSDs');
-            grid on;
-            hold off;
-            image_name =sprintf('%s_PSD_%sp%d', patient_ID, segments{i_file}, s);
-            image_name_full = fullfile(dir_psd,image_name);
-            saveas(gcf,image_name_full,'png');
-            close(figure(1));
-
-            %% Save average PSD per ROI
-            disp("Saving average PSD per ROI")
-
-            % Build a structure to save
-            PSD_data = struct();
-            PSD_data.patient_ID = patient_ID;
-            PSD_data.psd_resolution = psd_resolution;
-            PSD_data.CPC = CPC;
-            PSD_data.freqs = freqs;
-            PSD_data.ROI_psd = ROI_psd;
-            
-            % Save as .mat
-            mat_filename = fullfile(dir_psd, sprintf('%s_Seg%s_Part%d_ROI_PSD', patient_ID, segments{i_file}, s));
-            save(mat_filename, '-struct', 'PSD_data');
-            disp(['Saved ROI PSD data to: ', mat_filename]);
-            
-            %% Compute average bandpower per ROI
-            disp("Computing average features per ROI...")
-
-            % Compute bandpowers for each voxel in decibel 
-            bp_delta = 10*log10(bandpower(voxel_ts', Fs, [1 4])); % delta 
-            bp_theta = 10*log10(bandpower(voxel_ts', Fs, [4 8])); % theta 
-            bp_alpha = 10*log10(bandpower(voxel_ts', Fs, [8 13])); % alpha 
-            bp_beta = 10*log10(bandpower(voxel_ts', Fs, [13 30])); % beta
-            
-            % Preallocate a table
-            % Initialize storage for one row of feature summary
-            % Columns: [Patient | Feature_Name | Resolution | CPC | all ROIs...]
-            feature_list = {'Delta', 'Theta', 'Alpha', 'Beta'};
-            n_features = numel(feature_list);
-            n_rois = numel(roi_list);
-            
-            % Create an empty cell array to later convert to a table
-            data_out = cell(n_features, 4 + n_rois);
-            
-            % Compute bandpower for each ROI
-            for f_idx = 1:n_features
-                switch feature_list{f_idx}
-                    case 'Delta'
-                        bp_voxel = bp_delta;
-                        freq_band = [1 4];
-                    case 'Theta'
-                        bp_voxel = bp_theta;
-                        freq_band = [4 8];
-                    case 'Alpha'
-                        bp_voxel = bp_alpha;
-                        freq_band = [8 13];
-                    case 'Beta'
-                        bp_voxel = bp_beta;
-                        freq_band = [13 30];
+                % --- Convert to FieldTrip format ---
+                data_fieldtrip = [];
+                data_fieldtrip.trial{1} = segSignal_clean;   % channels × samples
+                data_fieldtrip.time{1}  = tVec_clean;        % seconds
+                data_fieldtrip.label    = chanNames;
+                data_fieldtrip.fsample  = Fs;
+                
+                % --- Optional: rename channels if needed ---
+                % data_fieldtrip.label{1,8}  = 'T7'; % T3
+                % data_fieldtrip.label{1,12} = 'T8'; % T4
+                % data_fieldtrip.label{1,13} = 'P7'; % T5
+                % data_fieldtrip.label{1,17} = 'P8'; % T6
+                
+                % --- Save segment plot ---
+                cfg = [];
+                cfg.viewmode = 'vertical';
+                cfg.blocksize = tVec_clean(end) - tVec_clean(1);
+                % Create invisible figure
+                fig = figure('Visible','off');
+                ft_databrowser(cfg, data_fieldtrip);
+                
+                image_name_full = fullfile(dir_eegplot, sprintf('%s_EEG_%sp%d', patient_ID, segments{i_file}, s));
+                ui_controls = findall(gcf, 'Type', 'uicontrol');
+                delete(ui_controls);
+                saveas(gcf, image_name_full, 'png');
+                close(figure(1)); 
+    
+                %% === Run Champagne ===
+                Y = segSignal_clean; % channels x samples
+                sigu_init = norm(Y*Y')*eye(size(Y',2))*1e-6;
+    
+                % [n_sensors, total_cols] = size(LFmatrix);
+                % n_voxels = total_cols / 3;
+                % 
+                % % Preallocate interleaved leadfield
+                % LF_interleaved = zeros(n_sensors, total_cols);
+                % 
+                % % Reorder from grouped -> interleaved
+                % for v = 1:n_voxels
+                %     LF_interleaved(:, (v-1)*3 + (1:3)) = LFmatrix(:, [v, v + n_voxels, v + 2*n_voxels]);
+                % end
+                % gammainit=ones(n_dir,n_dir,n_voxels);
+                % [Gamma,s,w,cost,k,dGamma]=champagne_plain(Y,LFmatrix,sigu_init,champ_iter,gammainit,n_dir);
+                
+                disp("Running Champagne...")
+                [Gamma_y,~,~,~,~,Sigma_y] = champ_noise_up(Y, LFmatrix, sigu_init, champ_iter, n_dir, 0, plot_flag, 0, 2, 1, 1e-16);
+                if plot_flag, close(figure(1)); end
+    
+                %% Beamformer Source Reconstruction using Champagne Posterior
+                n_voxels  = size(LFmatrix, 2) / n_dir;  % n_dir = number of orientations (usually 3)
+                n_sensors = size(LFmatrix, 1);          % e.g., 19 sensors
+                n_samples = size(Y, 2);                 % number of time samples
+                
+                disp(['Number of voxels: ', num2str(n_voxels)]);
+                
+                % Build full block-diagonal Gamma (source prior covariance)
+                disp('Building block-diagonal Gamma...');
+                Gamma_blocks = cell(1, n_voxels);
+                for v = 1:n_voxels
+                    Gamma_blocks{v} = Gamma_y(:,:,v);  % 3x3 covariance for voxel v
                 end
-            
-                % Average by ROI
-                for r = 1:n_rois
-                    mask = ROI_mask.(roi_list{r});
+                Gamma_full = blkdiag(Gamma_blocks{:});  % [3*n_voxels x 3*n_voxels]
+                
+                % Compute inverse noise covariance
+                invSigmaY = pinv(Sigma_y);  % Regularized inverse may be better for noisy data
+                
+                % Compute posterior mean of sources
+                % Formula: X_hat = Gamma * L' * inv(Sigma_y) * Y
+                disp('Computing posterior mean...');
+                X_hat = Gamma_full * LFmatrix' * invSigmaY * Y;  % [3*n_voxels x n_samples]
+                
+                % PCA reduction per voxel
+                disp('Reducing 3 orientations → 1 time series per voxel using PCA...');
+                voxel_ts = zeros(n_voxels, n_samples);  % final output: [n_voxels x n_samples]
+                
+                for v = 1:n_voxels
+                    idx = (v-1)*n_dir + (1:n_dir);  % indices for the 3 orientations of voxel v (grouped, not interleaved)
+                    S_v = X_hat(idx, :);            % [3 x n_samples]
+                    
+                    % Center the data across time
+                    S_v = S_v - mean(S_v, 2);
+                
+                    % PCA using SVD
+                    [U,~,~] = svd(S_v, 'econ');     % U: [3 x 3]
+                    voxel_ts(v, :) = U(:,1)' * S_v; % Project onto first principal component
+                end
+                
+                disp('Source reconstruction complete');
+    
+                %% Spectral Analysis
+                disp("Spectral Analysis...")
+                % Preallocate PSD storage
+                % Using pwelch: output will be [n_freqs x n_voxels]
+                % Compute PSD for the first voxel to get freq vector
+                n_samples_epoch = epoch_length * Fs;
+                n_overlap = floor(n_samples_epoch * overlap);
+                [pxx,freqs] = pwelch(voxel_ts(1,:), n_samples_epoch, n_overlap, n_samples_epoch, Fs);
+                n_freqs = length(freqs);
+                psd_voxels = zeros(n_voxels, n_freqs);
+                psd_voxels(1,:) = pxx';
+                
+                % Compute PSD for all voxels
+                for v = 2:n_voxels
+                    [pxx,~] = pwelch(voxel_ts(v,:), n_samples_epoch, n_overlap, n_samples_epoch, Fs);
+                    psd_voxels(v,:) = pxx';
+                end
+                
+                % Average PSD per ROI
+                % atlas.tissue: voxel-to-ROI mapping
+                % roi_list: list of ROI names (excluding 'Other')
+                % psd_voxels: [n_voxels x n_freqs] for the current patient
+                ROI_psd = struct();
+    
+                % Save needed info
+                ind_freq = freqs<utilityFreq;
+                freqs=freqs(ind_freq);
+                ROI_psd.freq=freqs;
+                ROI_psd.ROI_names=roi_list;
+                
+                for i = 1:length(roi_list)
+                    mask = ROI_mask.(roi_list{i});
                     if any(mask)
-                        % Mean of bandpower over all voxels in ROI
-                        roi_bp(r) = mean(bp_voxel(mask));
+                        ROI_psd.(roi_list{i}) = mean(psd_voxels(mask,ind_freq),1);
                     else
-                        roi_bp(r) = NaN;
+                        ROI_psd.(roi_list{i}) = nan(1,length(ind_freq));
                     end
                 end
-            
-                % Fill the data_out row
-                data_out{f_idx,1} = patient_ID;           % Patient
-                data_out{f_idx,2} = segments{i_file};     % Segment
-                data_out{f_idx,3} = s;                    % Part 
-                data_out{f_idx,4} = feature_list{f_idx};  % Feature_Name
-                data_out{f_idx,5} = psd_resolution;       % Resolution
-                data_out{f_idx,6} = CPC;                  % CPC
+    
+              
+                % --- Plot 10 random voxel PSDs ---
+                n_rand = 10;  % number of random PSDs to plot
+                n_voxels = size(psd_voxels, 1);
                 
-                % ROI values start at column 7
-                for r = 1:n_rois
-                    data_out{f_idx,6+r} = roi_bp(r);      % ROI values
+                % Random selection of voxel indices
+                %rng('shuffle');  % ensures different random picks each run
+                rand_idx = randperm(n_voxels, min(n_rand, n_voxels));
+                
+                % Plot
+                fig = figure('Visible','off');
+                hold on;
+                for i = 1:length(rand_idx)
+                    plot(freqs, 10*log10(psd_voxels(rand_idx(i),ind_freq)), 'LineWidth', 1.2);
                 end
-            end
-            
-            % Convert to table
-            column_names = [{'Patient','Segment', 'Part', 'Feature_Name','Resolution','CPC'}, roi_list'];
-            T = cell2table(data_out, 'VariableNames', column_names);
-            
-            % Save to Excel
-            excel_filename = fullfile(dir_table, sprintf('%s_Seg%s_Part%d_ROI_Features', patient_ID, segments{i_file}, s));
-            writetable(T, excel_filename, "FileType", "spreadsheet");
-            
-            disp(['Saved ROI features to: ', excel_filename]);
+                xlabel('Frequency (Hz)');
+                ylabel('Power (dB)');
+                title('10 Random Voxel PSDs');
+                grid on;
+                hold off;
+                image_name =sprintf('%s_PSD_%sp%d', patient_ID, segments{i_file}, s);
+                image_name_full = fullfile(dir_psd,image_name);
+                saveas(gcf,image_name_full,'png');
+                close(figure(1));
+    
+                %% Save average PSD per ROI
+                disp("Saving average PSD per ROI")
+    
+                % Build a structure to save
+                PSD_data = struct();
+                PSD_data.patient_ID = patient_ID;
+                PSD_data.psd_resolution = psd_resolution;
+                PSD_data.CPC = CPC;
+                PSD_data.freqs = freqs;
+                PSD_data.ROI_psd = ROI_psd;
+                
+                % Save as .mat
+                mat_filename = fullfile(dir_psd, sprintf('%s_Seg%s_Part%d_ROI_PSD', patient_ID, segments{i_file}, s));
+                save(mat_filename, '-struct', 'PSD_data');
+                disp(['Saved ROI PSD data to: ', mat_filename]);
+                
+                %% Compute average bandpower per ROI
+                disp("Computing average features per ROI...")
+    
+                % Compute bandpowers for each voxel in decibel 
+                bp_delta = 10*log10(bandpower(voxel_ts', Fs, [1 4])); % delta 
+                bp_theta = 10*log10(bandpower(voxel_ts', Fs, [4 8])); % theta 
+                bp_alpha = 10*log10(bandpower(voxel_ts', Fs, [8 13])); % alpha 
+                bp_beta = 10*log10(bandpower(voxel_ts', Fs, [13 30])); % beta
+                
+                % Preallocate a table
+                % Initialize storage for one row of feature summary
+                % Columns: [Patient | Feature_Name | Resolution | CPC | all ROIs...]
+                feature_list = {'Delta', 'Theta', 'Alpha', 'Beta'};
+                n_features = numel(feature_list);
+                n_rois = numel(roi_list);
+                
+                % Create an empty cell array to later convert to a table
+                data_out = cell(n_features, 4 + n_rois);
+                
+                % Compute bandpower for each ROI
+                for f_idx = 1:n_features
+                    switch feature_list{f_idx}
+                        case 'Delta'
+                            bp_voxel = bp_delta;
+                            freq_band = [1 4];
+                        case 'Theta'
+                            bp_voxel = bp_theta;
+                            freq_band = [4 8];
+                        case 'Alpha'
+                            bp_voxel = bp_alpha;
+                            freq_band = [8 13];
+                        case 'Beta'
+                            bp_voxel = bp_beta;
+                            freq_band = [13 30];
+                    end
+                
+                    % Average by ROI
+                    for r = 1:n_rois
+                        mask = ROI_mask.(roi_list{r});
+                        if any(mask)
+                            % Mean of bandpower over all voxels in ROI
+                            roi_bp(r) = mean(bp_voxel(mask));
+                        else
+                            roi_bp(r) = NaN;
+                        end
+                    end
+                
+                    % Fill the data_out row
+                    data_out{f_idx,1} = patient_ID;           % Patient
+                    data_out{f_idx,2} = segments{i_file};     % Segment
+                    data_out{f_idx,3} = s;                    % Part 
+                    data_out{f_idx,4} = feature_list{f_idx};  % Feature_Name
+                    data_out{f_idx,5} = psd_resolution;       % Resolution
+                    data_out{f_idx,6} = CPC;                  % CPC
+                    
+                    % ROI values start at column 7
+                    for r = 1:n_rois
+                        data_out{f_idx,6+r} = roi_bp(r);      % ROI values
+                    end
+                end
+                
+                % Convert to table
+                column_names = [{'Patient','Segment', 'Part', 'Feature_Name','Resolution','CPC'}, roi_list'];
+                T = cell2table(data_out, 'VariableNames', column_names);
+                
+                % Save to Excel
+                excel_filename = fullfile(dir_table, sprintf('%s_Seg%s_Part%d_ROI_Features', patient_ID, segments{i_file}, s));
+                writetable(T, excel_filename, "FileType", "spreadsheet");
+                
+                disp(['Saved ROI features to: ', excel_filename]);
 
-        end
+
+              catch
+                fprintf("Problems with Segment %s, part %d. Skipping...\n", segments{i_file}, s);
+              end
+          
+            end  
     end
 end
 

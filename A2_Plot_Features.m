@@ -64,7 +64,7 @@ job_id = unique(patient_list.Patient);
 
 % Run sourcelocalization
 % Loop over each patient
-for i = 1:length(job_id)
+for i = 2:length(job_id)
 
     pid = job_id{i};  % current patient ID (string)
     
