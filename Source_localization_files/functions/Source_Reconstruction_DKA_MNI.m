@@ -23,8 +23,8 @@ function Source_Reconstruction_DKA_MNI(patient_info, dir_output, max_min, plot_f
 
     % --- Configurations ---
     % c.Preprocessing
-    F_interpolation = 100;
-    heavy_artifact_rej = false;
+    F_interpolation = 100;       % Resampling Frequency [Hz]
+    heavy_artifact_rej = false;  % TRUE = Use dipole fitting for ICA artifact rejection
 
     % c.Reconstruction
     champ_iter = 15;    %[Champagne iterations]
@@ -33,13 +33,15 @@ function Source_Reconstruction_DKA_MNI(patient_info, dir_output, max_min, plot_f
     % c.Spectral Analysis
     epoch_length = 5;      %[s]
     overlap = 0.5;         %[a.u.]
-    psd_resolution = 1;    %[min] (Average psds over x minutes)
+    psd_resolution = 1;    %[min] (PSDs - Signal time window [minutes])
 
     % --- Load resources ---
     leadfield_file = fullfile('Source_localization_files', 'leadfield_output', 'leadfield_19elec.mat');
     load(leadfield_file, 'LFmatrix', 'leadfield', 'inside_idx', 'elec_aligned'); 
     leadfdc = leadfield; insideix = inside_idx; labels=elec_aligned.label;
     load(fullfile('Source_localization_files', 'MNI_DKA_Standard_Files.mat'), 'atlas');
+
+     clear('leadfield','inside_idx', 'elec_aligned') 
 
     % leadfield_file = fullfile('Source_localization_files', 'MNI_DKA_Standard_Files.mat');
     % load(leadfield_file, 'LFmatrix', 'leadfdc', 'insideix', 'atlas', 'labels');
@@ -48,9 +50,10 @@ function Source_Reconstruction_DKA_MNI(patient_info, dir_output, max_min, plot_f
     dir_out = fullfile(dir_output);
     dir_eegplot = fullfile(dir_out, '01_EEGsegmentPlots');
     dir_psd  = fullfile(dir_out, '02_SourcePSDs');
-    dir_table  = fullfile(dir_out, '03_FeaturesTables');
+    dir_table_plain  = fullfile(dir_out, '03_FeaturesCHAN');
+    dir_table  = fullfile(dir_out, '03_FeaturesROI');
     dir_figs  = fullfile(dir_out, '04_FeaturePlots');
-    cellfun(@(d) ~exist(d,'dir') && mkdir(d), {dir_table, dir_figs, dir_eegplot, dir_psd});
+    cellfun(@(d) ~exist(d,'dir') && mkdir(d), {dir_table, dir_table_plain, dir_figs, dir_eegplot, dir_psd});
 
     % --- Preapre data ---
     patient_ID = patient_info.Patient;
@@ -131,7 +134,7 @@ function Source_Reconstruction_DKA_MNI(patient_info, dir_output, max_min, plot_f
                     continue;
                 end
 
-                % --- Convert to FieldTrip format ---
+                % --- Convert to FieldTrip format for plotting ---
                 data_fieldtrip = [];
                 data_fieldtrip.trial{1} = segSignal_clean;   % channels × samples
                 data_fieldtrip.time{1}  = tVec_clean;        % seconds
@@ -157,6 +160,25 @@ function Source_Reconstruction_DKA_MNI(patient_info, dir_output, max_min, plot_f
                 delete(ui_controls);
                 saveas(gcf, image_name_full, 'png');
                 close(figure(1)); 
+
+                %% Extract sensor space features
+
+                info = struct( ...
+                'Fs', Fs, ...
+                'patientID', patient_ID, ...
+                'CPC', CPC, ...
+                'segmentID', segments{i_file}, ...
+                'partID', s, ...
+                'resolution', psd_resolution, ...
+                'epoch_length', epoch_length, ...   % in samples or seconds 
+                'overlap', overlap); 
+
+                Features_plain_EEG = extract_eeg_features(segSignal_clean, info, chanNames, []);
+
+                excel_filename = fullfile(dir_table_plain, sprintf('%s_Seg%s_Part%d_EEG_Features', patient_ID, segments{i_file}, s));
+                writetable(Features_plain_EEG, excel_filename, "FileType", "spreadsheet");
+
+                clear('Features_plain_EEG','cfg', 'segSignal') 
     
                 %% === Run Champagne ===
                 Y = segSignal_clean; % channels x samples
@@ -221,153 +243,93 @@ function Source_Reconstruction_DKA_MNI(patient_info, dir_output, max_min, plot_f
                 disp('Source reconstruction complete');
     
                 %% Spectral Analysis
-                disp("Spectral Analysis...")
-                % Preallocate PSD storage
-                % Using pwelch: output will be [n_freqs x n_voxels]
-                % Compute PSD for the first voxel to get freq vector
-                n_samples_epoch = epoch_length * Fs;
-                n_overlap = floor(n_samples_epoch * overlap);
-                [pxx,freqs] = pwelch(voxel_ts(1,:), n_samples_epoch, n_overlap, n_samples_epoch, Fs);
-                n_freqs = length(freqs);
-                psd_voxels = zeros(n_voxels, n_freqs);
-                psd_voxels(1,:) = pxx';
+                % disp("Spectral Analysis...")
+                % % Preallocate PSD storage
+                % % Using pwelch: output will be [n_freqs x n_voxels]
+                % % Compute PSD for the first voxel to get freq vector
+                % n_samples_epoch = epoch_length * Fs;
+                % n_overlap = floor(n_samples_epoch * overlap);
+                % [pxx,freqs] = pwelch(voxel_ts(1,:), n_samples_epoch, n_overlap, n_samples_epoch, Fs);
+                % n_freqs = length(freqs);
+                % psd_voxels = zeros(n_voxels, n_freqs);
+                % psd_voxels(1,:) = pxx';
+                % 
+                % % Compute PSD for all voxels
+                % for v = 2:n_voxels
+                %     [pxx,~] = pwelch(voxel_ts(v,:), n_samples_epoch, n_overlap, n_samples_epoch, Fs);
+                %     psd_voxels(v,:) = pxx';
+                % end
+                % 
+                % % Average PSD per ROI
+                % % atlas.tissue: voxel-to-ROI mapping
+                % % roi_list: list of ROI names (excluding 'Other')
+                % % psd_voxels: [n_voxels x n_freqs] for the current patient
+                % ROI_psd = struct();
+                % 
+                % % Save needed info
+                % ind_freq = freqs<utilityFreq;
+                % freqs=freqs(ind_freq);
+                % ROI_psd.freq=freqs;
+                % ROI_psd.ROI_names=roi_list;
+                % 
+                % for i = 1:length(roi_list)
+                %     mask = ROI_mask.(roi_list{i});
+                %     if any(mask)
+                %         ROI_psd.(roi_list{i}) = mean(psd_voxels(mask,ind_freq),1);
+                %     else
+                %         ROI_psd.(roi_list{i}) = nan(1,length(ind_freq));
+                %     end
+                % end
+                % 
+                % 
+                % % --- Plot 10 random voxel PSDs ---
+                % n_rand = 10;  % number of random PSDs to plot
+                % n_voxels = size(psd_voxels, 1);
+                % 
+                % % Random selection of voxel indices
+                % %rng('shuffle');  % ensures different random picks each run
+                % rand_idx = randperm(n_voxels, min(n_rand, n_voxels));
+                % 
+                % % Plot
+                % fig = figure('Visible','off');
+                % hold on;
+                % for i = 1:length(rand_idx)
+                %     plot(freqs, 10*log10(psd_voxels(rand_idx(i),ind_freq)), 'LineWidth', 1.2);
+                % end
+                % xlabel('Frequency (Hz)');
+                % ylabel('Power (dB)');
+                % title('10 Random Voxel PSDs');
+                % grid on;
+                % hold off;
+                % image_name =sprintf('%s_PSD_%sp%d', patient_ID, segments{i_file}, s);
+                % image_name_full = fullfile(dir_psd,image_name);
+                % saveas(gcf,image_name_full,'png');
+                % close(figure(1));
+                % 
+                % % Save average PSD per ROI
+                % disp("Saving average PSD per ROI")
+                % 
+                % % Build a structure to save
+                % PSD_data = struct();
+                % PSD_data.patient_ID = patient_ID;
+                % PSD_data.psd_resolution = psd_resolution;
+                % PSD_data.CPC = CPC;
+                % PSD_data.freqs = freqs;
+                % PSD_data.ROI_psd = ROI_psd;
+                % 
+                % % Save as .mat
+                % mat_filename = fullfile(dir_psd, sprintf('%s_Seg%s_Part%d_ROI_PSD', patient_ID, segments{i_file}, s));
+                % save(mat_filename, '-struct', 'PSD_data');
+                % disp(['Saved ROI PSD data to: ', mat_filename]);
                 
-                % Compute PSD for all voxels
-                for v = 2:n_voxels
-                    [pxx,~] = pwelch(voxel_ts(v,:), n_samples_epoch, n_overlap, n_samples_epoch, Fs);
-                    psd_voxels(v,:) = pxx';
-                end
-                
-                % Average PSD per ROI
-                % atlas.tissue: voxel-to-ROI mapping
-                % roi_list: list of ROI names (excluding 'Other')
-                % psd_voxels: [n_voxels x n_freqs] for the current patient
-                ROI_psd = struct();
-    
-                % Save needed info
-                ind_freq = freqs<utilityFreq;
-                freqs=freqs(ind_freq);
-                ROI_psd.freq=freqs;
-                ROI_psd.ROI_names=roi_list;
-                
-                for i = 1:length(roi_list)
-                    mask = ROI_mask.(roi_list{i});
-                    if any(mask)
-                        ROI_psd.(roi_list{i}) = mean(psd_voxels(mask,ind_freq),1);
-                    else
-                        ROI_psd.(roi_list{i}) = nan(1,length(ind_freq));
-                    end
-                end
-    
-              
-                % --- Plot 10 random voxel PSDs ---
-                n_rand = 10;  % number of random PSDs to plot
-                n_voxels = size(psd_voxels, 1);
-                
-                % Random selection of voxel indices
-                %rng('shuffle');  % ensures different random picks each run
-                rand_idx = randperm(n_voxels, min(n_rand, n_voxels));
-                
-                % Plot
-                fig = figure('Visible','off');
-                hold on;
-                for i = 1:length(rand_idx)
-                    plot(freqs, 10*log10(psd_voxels(rand_idx(i),ind_freq)), 'LineWidth', 1.2);
-                end
-                xlabel('Frequency (Hz)');
-                ylabel('Power (dB)');
-                title('10 Random Voxel PSDs');
-                grid on;
-                hold off;
-                image_name =sprintf('%s_PSD_%sp%d', patient_ID, segments{i_file}, s);
-                image_name_full = fullfile(dir_psd,image_name);
-                saveas(gcf,image_name_full,'png');
-                close(figure(1));
-    
-                %% Save average PSD per ROI
-                disp("Saving average PSD per ROI")
-    
-                % Build a structure to save
-                PSD_data = struct();
-                PSD_data.patient_ID = patient_ID;
-                PSD_data.psd_resolution = psd_resolution;
-                PSD_data.CPC = CPC;
-                PSD_data.freqs = freqs;
-                PSD_data.ROI_psd = ROI_psd;
-                
-                % Save as .mat
-                mat_filename = fullfile(dir_psd, sprintf('%s_Seg%s_Part%d_ROI_PSD', patient_ID, segments{i_file}, s));
-                save(mat_filename, '-struct', 'PSD_data');
-                disp(['Saved ROI PSD data to: ', mat_filename]);
-                
-                %% Compute average bandpower per ROI
+                %% Compute average bandpower per ROI (source space)
                 disp("Computing average features per ROI...")
     
-                % Compute bandpowers for each voxel in decibel 
-                bp_delta = 10*log10(bandpower(voxel_ts', Fs, [1 4])); % delta 
-                bp_theta = 10*log10(bandpower(voxel_ts', Fs, [4 8])); % theta 
-                bp_alpha = 10*log10(bandpower(voxel_ts', Fs, [8 13])); % alpha 
-                bp_beta = 10*log10(bandpower(voxel_ts', Fs, [13 30])); % beta
-                
-                % Preallocate a table
-                % Initialize storage for one row of feature summary
-                % Columns: [Patient | Feature_Name | Resolution | CPC | all ROIs...]
-                feature_list = {'Delta', 'Theta', 'Alpha', 'Beta'};
-                n_features = numel(feature_list);
-                n_rois = numel(roi_list);
-                
-                % Create an empty cell array to later convert to a table
-                data_out = cell(n_features, 4 + n_rois);
-                
-                % Compute bandpower for each ROI
-                for f_idx = 1:n_features
-                    switch feature_list{f_idx}
-                        case 'Delta'
-                            bp_voxel = bp_delta;
-                            freq_band = [1 4];
-                        case 'Theta'
-                            bp_voxel = bp_theta;
-                            freq_band = [4 8];
-                        case 'Alpha'
-                            bp_voxel = bp_alpha;
-                            freq_band = [8 13];
-                        case 'Beta'
-                            bp_voxel = bp_beta;
-                            freq_band = [13 30];
-                    end
-                
-                    % Average by ROI
-                    for r = 1:n_rois
-                        mask = ROI_mask.(roi_list{r});
-                        if any(mask)
-                            % Mean of bandpower over all voxels in ROI
-                            roi_bp(r) = mean(bp_voxel(mask));
-                        else
-                            roi_bp(r) = NaN;
-                        end
-                    end
-                
-                    % Fill the data_out row
-                    data_out{f_idx,1} = patient_ID;           % Patient
-                    data_out{f_idx,2} = segments{i_file};     % Segment
-                    data_out{f_idx,3} = s;                    % Part 
-                    data_out{f_idx,4} = feature_list{f_idx};  % Feature_Name
-                    data_out{f_idx,5} = psd_resolution;       % Resolution
-                    data_out{f_idx,6} = CPC;                  % CPC
-                    
-                    % ROI values start at column 7
-                    for r = 1:n_rois
-                        data_out{f_idx,6+r} = roi_bp(r);      % ROI values
-                    end
-                end
-                
-                % Convert to table
-                column_names = [{'Patient','Segment', 'Part', 'Feature_Name','Resolution','CPC'}, roi_list'];
-                T = cell2table(data_out, 'VariableNames', column_names);
+                Features_source_EEG = extract_eeg_features(voxel_ts, info, roi_list, ROI_mask);
                 
                 % Save to Excel
                 excel_filename = fullfile(dir_table, sprintf('%s_Seg%s_Part%d_ROI_Features', patient_ID, segments{i_file}, s));
-                writetable(T, excel_filename, "FileType", "spreadsheet");
+                writetable(Features_source_EEG, excel_filename, "FileType", "spreadsheet");
                 
                 disp(['Saved ROI features to: ', excel_filename]);
 

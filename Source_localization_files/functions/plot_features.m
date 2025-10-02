@@ -1,4 +1,4 @@
-function plot_patient_features(patient_info, output_folder, plot_flag, unit)
+function plot_patient_features(patient_info, output_folder, plot_flag)
 %PLOT_PATIENT_FEATURES Combine and plot EEG feature data for a single patient
 %
 %   plot_patient_features(patient_info, base_folder, plot_flag, unit)
@@ -20,14 +20,10 @@ function plot_patient_features(patient_info, output_folder, plot_flag, unit)
 %   The Excel files must have columns:
 %       Patient | Segment | Part | Feature_Name | Resolution | CPC | ROI1 | ROI2 | ...
 
-    if nargin < 4
-        unit = 'dB'; % default to decibels
-    end
-
     patient_ID = patient_info.Patient;
 
     %% Set up paths
-    dir_results = fullfile(output_folder, '03_FeaturesTables');
+    dir_results = fullfile(output_folder, '03_FeaturesROI');
     if ~exist(dir_results, 'dir')
         error('Results folder for patient %s not found: %s', patient_ID, dir_results);
     end
@@ -85,11 +81,14 @@ function plot_patient_features(patient_info, output_folder, plot_flag, unit)
     %% Loop over each feature
     for f = 1:length(feature_names)
         feature = feature_names{f};
+        
         fprintf('Processing feature: %s\n', feature);
 
         % Filter rows for this feature
         rows = strcmp(all_data.Feature_Name, feature);
         T_feat = all_data(rows, :);
+
+        unit = string(unique(T_feat.Unit));
 
         % Sort by Segment and Part
         [~, sort_idx] = sortrows(T_feat, {'Segment','Part'});
@@ -127,25 +126,32 @@ function plot_patient_features(patient_info, output_folder, plot_flag, unit)
                 % Negative values are meaningful in dB, so use symmetric scaling around 0
                 max_abs_val = max(abs(mean_feat));    % strongest magnitude
                 clim = [-max_abs_val, max_abs_val];   % symmetric around zero
+
+                if strcmp(unit, "%")
+                    clim = [0, 100]; end
                 
                 %% Rename the parameter for FieldTrip (optional but recommended)
-                atlas_tmp.avg = atlas_tmp.pow;   % FieldTrip expects 'avg' for signed data
-                cfg_funparam = 'avg';
+                % atlas_tmp.avg = atlas_tmp.pow;   % FieldTrip expects 'avg' for signed data
+                cfg_funparam = 'pow';
                 
                 %% Plot using FieldTrip
                 cfg = [];
                 cfg.method              = 'slice';
                 cfg.funparameter        = cfg_funparam;
-                cfg.funcolormap         = 'jet';      % diverging colormap (better than 'plasma')
-                cfg.funcolorlim         = clim;       % symmetric limits
-                cfg.maskparameter       = [];         % don't hide negative values
+                cfg.funcolormap         = 'jet';      % diverging colormap
+                cfg.funcolorlim         = clim;       
+                cfg.maskparameter       = 'pow';      
                 cfg.locationcoordinates = 'voxel';
                 cfg.crosshair           = 'yes';
                 cfg.verbose             = 'no';
+                cfg.opacitymap          = 'rampup';
+                cfg.opacitylim          = [clim(1) clim(2)];
                 
                 % figure;
                 fig = figure('Visible','off');
                 ft_sourceplot(cfg, atlas_tmp);
+
+                % OLD PLOTTING - TO BE DELETED LATER
                 % clim = [nanmean(mean_feat)-1.5*nanstd(mean_feat) nanmean(mean_feat)+1.5*nanstd(mean_feat)];
                 % 
                 % %% Plot using FieldTrip
@@ -162,6 +168,7 @@ function plot_patient_features(patient_info, output_folder, plot_flag, unit)
                 % figure;
                 % ft_sourceplot(cfg, atlas_tmp);
 
+                
                 % Title includes segment and part
                 title(sprintf('%s - %s | Segment: %s, Part: %d (%s)', ...
                     patient_ID, feature, seg, p, unit), ...
@@ -172,7 +179,7 @@ function plot_patient_features(patient_info, output_folder, plot_flag, unit)
                 if strcmpi(unit, 'dB')
                     h.Label.String = 'Source Power [10log_{10}(\muV^2)]';
                 else
-                    h.Label.String = 'Source Power [a.u.]';
+                    h.Label.String = unit;
                 end
                 h.Label.Interpreter = 'tex';
 

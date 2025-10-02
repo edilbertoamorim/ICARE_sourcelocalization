@@ -64,7 +64,7 @@ job_id = unique(patient_list.Patient);
 
 % Run sourcelocalization
 % Loop over each patient
-for i = 2:length(job_id)
+for i = 1:length(job_id)
 
     pid = job_id{i};  % current patient ID (string)
     
@@ -80,7 +80,7 @@ for i = 2:length(job_id)
     try
         plot_features(patient_info, dir_output, VERBOSE);
     catch ME
-        warning('Process failed (%s)', ME.message);
+        warning(ME.identifier, 'Process failed (%s)', ME.message);
         disp(strcat("Problems with Patient : ", string(pid), " - Skipping..."))
     end
 end
