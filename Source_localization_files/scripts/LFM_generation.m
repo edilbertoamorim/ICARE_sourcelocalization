@@ -15,10 +15,12 @@ clear; clc;
 leadfield_file = 'Source_localization_files/mri_data.mat';
 load(leadfield_file,  'mri');
 
+ft_defaults
+
 %% Parameters
 output_dir  = 'Source_localization_files/leadfield_output';
-grid_res    = 15;    % mm grid spacing
-inwardshift = -3;  % push source grid inward to avoid skull boundary
+grid_res    = 10;    % mm grid spacing
+inwardshift = -1.5;  % push source grid inward to avoid skull boundary
 normalizeLF = 'yes'; % normalize leadfield vectors
 
 if ~exist(output_dir, 'dir'); mkdir(output_dir); end

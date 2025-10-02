@@ -79,7 +79,7 @@ Source_localization/
 
 ### Notes
 - For detailed explanation of parameters, check comments inside each .m file.
-- The scripts **LFM_generation.m** and **Get_patient_IDs.m** are needed to create the resources needed in the main scripts 
+- The scripts **LFM_generation.m** and **Get_patient_IDs.m** are used to create the resources needed in the main scripts 
 
 ## References
 
