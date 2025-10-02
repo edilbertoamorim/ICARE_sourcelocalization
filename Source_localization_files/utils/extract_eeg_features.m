@@ -64,6 +64,8 @@ end
 function [vals, featNames, units, colNames] = compute_bandpowers(signal, Fs, ROI_mask, chanNames, epochLen, overlap)
     % signal = [nChan x nSamples]
     % Fs     = sampling rate
+    % epochLen = length of each Welch window in seconds
+    % overlap  = fraction overlap (0–1)
 
     % Define frequency bands
     bands = { 'Delta', [1.5 6];
@@ -78,33 +80,31 @@ function [vals, featNames, units, colNames] = compute_bandpowers(signal, Fs, ROI
     absP  = zeros(nBands,nChan);
     totP  = zeros(1,nChan);
 
-    % --- Use EEGLAB spectopo ---
-    % [spectra, freqs] = spectopo(signal, frames, srate, 'plot', 'off')
-    % spectra: [nChan x nFreqs] in dB (10*log10(uV^2/Hz))
-    nSamples = size(signal,2);
-    winSize  = round(epochLen * Fs);         % number of samples
-    overlap  = round(overlap  * winSize);    % overlap
+    % Define window and overlap in samples
+    winSize  = round(epochLen * Fs);
+    noverlap = round(overlap * winSize);
 
-    if winSize > nSamples
-        error('Window Size for PSD bigger than signal'); end
-    
-    [spectra, freqs] = spectopo(signal, 0, Fs, ...
-                                'winsize', winSize, ...
-                                'overlap', overlap, ...
-                                'plot', 'off');
+    if winSize > size(signal,2)
+        error('Window Size for PSD bigger than signal');
+    end
 
-    % Convert to linear power spectral density
-    psd = 10.^(spectra/10);  % [uV^2/Hz]
-
-    % Total bandpower
+    % Loop channels, compute absolute and relative bandpowers
     for ch = 1:nChan
-        totP(ch) = bandpower(psd(ch,:), freqs, totalBand, 'psd');
+        x = signal(ch,:);
+
+        % Compute PSD with Welch
+        [Pxx,f] = pwelch(x, winSize, noverlap, [], Fs); % Pxx: power/Hz
+
+        % total power across full band
+        totP(ch) = bandpower(Pxx, f, totalBand, 'psd');
+
+        % band powers
         for b = 1:nBands
-            absP(b,ch) = bandpower(psd(ch,:), freqs, bands{b,2}, 'psd');
+            absP(b,ch) = bandpower(Pxx, f, bands{b,2}, 'psd');
         end
     end
 
-    relP = absP ./ totP *100;
+    relP = absP ./ totP * 100;
 
     % --- ROI averaging if mask provided ---
     if exist('ROI_mask','var') && ~isempty(ROI_mask)
@@ -124,15 +124,98 @@ function [vals, featNames, units, colNames] = compute_bandpowers(signal, Fs, ROI
         colNames = chanNames;
     end
 
-    absP = 10*log10(absP); % Convert back in [dB]
+    % Convert absolute powers to dB
+    absP = 10*log10(absP);
 
-    % --- Build outputs ---
-    vals = [absP; relP];
-    featNames = cell(nBands*2,1);
-    units     = cell(nBands*2,1);
-    row = 1;
+    % --- Build outputs: first all absolute bands, then all relative bands ---
+    vals = [absP; relP];            % [2*nBands x nCols] : first nBands = abs, next nBands = rel
+    featNames = cell(2*nBands,1);
+    units     = cell(2*nBands,1);
+
+    % first list all absolute-power feature names
     for b = 1:nBands
-        featNames{row} = [bands{b,1} '_AbsPower']; units{row} = 'dB'; row=row+1;
-        featNames{row} = [bands{b,1} '_RelPower']; units{row} = '%';    row=row+1;
+        featNames{b} = [bands{b,1} '_AbsPower'];
+        units{b} = 'dB';
+    end
+    % then list all relative-power feature names (matching the order in vals)
+    for b = 1:nBands
+        featNames{nBands + b} = [bands{b,1} '_RelPower'];
+        units{nBands + b} = '%';
     end
 end
+
+
+% function [vals, featNames, units, colNames] = compute_bandpowers(signal, Fs, ROI_mask, chanNames, epochLen, overlap)
+%     % signal = [nChan x nSamples]
+%     % Fs     = sampling rate
+%     % epochLen = length of each epoch in seconds
+%     % overlap  = fraction overlap (0–1)
+% 
+%     % Define frequency bands
+%     bands = { 'Delta', [1.5 6];
+%               'Theta', [6 8.5];
+%               'Alpha', [8.5 12.5];
+%               'Beta',  [12.5 30];
+%               'Gamma', [30 40] };
+%     totalBand = [1.5 40];
+%     nBands = size(bands,1);
+% 
+%     nChan = size(signal,1);
+%     absP  = zeros(nBands,nChan);
+%     totP  = zeros(1,nChan);
+% 
+%     % Define window and overlap in samples
+%     winSize  = round(epochLen * Fs);
+%     noverlap = round(overlap * winSize);
+% 
+%     if winSize > size(signal,2)
+%         error('Window Size for PSD bigger than signal');
+%     end
+% 
+%     % Loop channels, compute absolute and relative bandpowers
+%     for ch = 1:nChan
+%         x = signal(ch,:);
+% 
+%         % total power across full band
+%         totP(ch) = bandpower(x, Fs, totalBand);
+% 
+%         % band powers
+%         for b = 1:nBands
+%             absP(b,ch) = bandpower(x, Fs, bands{b,2});
+%         end
+%     end
+% 
+%     relP = absP ./ totP * 100;
+% 
+%     % --- ROI averaging if mask provided ---
+%     if exist('ROI_mask','var') && ~isempty(ROI_mask)
+%         roiNames = fieldnames(ROI_mask);
+%         nR = numel(roiNames);
+%         absR = zeros(nBands,nR);
+%         relR = zeros(nBands,nR);
+%         for r = 1:nR
+%             mask = ROI_mask.(roiNames{r})(:);
+%             absR(:,r) = mean(absP(:,mask),2,'omitnan');
+%             relR(:,r) = mean(relP(:,mask),2,'omitnan');
+%         end
+%         absP = absR;
+%         relP = relR;
+%         colNames = roiNames;
+%     else
+%         colNames = chanNames;
+%     end
+% 
+%     % Convert absolute powers to dB
+%     absP = 10*log10(absP);
+% 
+%     % --- Build outputs ---
+%     vals = [absP; relP];
+%     featNames = cell(nBands*2,1);
+%     units     = cell(nBands*2,1);
+%     row = 1;
+%     for b = 1:nBands
+%         featNames{row} = [bands{b,1} '_AbsPower']; units{row} = 'dB'; row=row+1;
+%         featNames{row} = [bands{b,1} '_RelPower']; units{row} = '%';  row=row+1;
+%     end
+% end
+

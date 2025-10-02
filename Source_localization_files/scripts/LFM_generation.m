@@ -110,12 +110,12 @@ cfg.channel = elec_aligned.label;
 cfg.normalize = normalizeLF;
 leadfield = ft_prepare_leadfield(cfg);
 
-% Convert to numeric matrix [sensors x (voxels * 3)]
+%% Convert to numeric matrix [sensors x (voxels * 3)]
 LFmatrix = cell2mat(leadfield.leadfield(inside_idx));
 
 fprintf('Leadfield size: %d sensors x %d columns\n', size(LFmatrix,1), size(LFmatrix,2));
 
-[LFmatrix, inside_idx] = remove_nan_voxels(LFmatrix, inside_idx);
+[LFmatrix, inside_idx, removed_idx] = remove_nan_voxels(LFmatrix, inside_idx);
 
 
 %% 8) Save

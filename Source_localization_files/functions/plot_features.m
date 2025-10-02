@@ -74,8 +74,13 @@ function plot_patient_features(patient_info, output_folder, plot_flag)
         end
     end
 
+    % Save combined table to a single Excel file
+    combined_file = fullfile(dir_results, sprintf('%s_All_Segments_Features.xlsx', patient_ID));
+    writetable(all_data, combined_file);
+    fprintf('Combined table saved to: %s\n', combined_file);
+
     %% Identify features and ROIs
-    % roi_names = all_data.Properties.VariableNames(8:end);  % ROI columns start at column 8
+    % roi_names = all_data.Properties.VariableNames(8:end-1);  % ROI columns start at column 8
     feature_names = unique(all_data.Feature_Name);
 
     %% Loop over each feature
@@ -108,11 +113,12 @@ function plot_patient_features(patient_info, output_folder, plot_flag)
 
             for p = 1:length(unique_parts)
                 % Filter by this part
-                rows_part = (T_seg.Part == p);
+                part = unique_parts(p); 
+                rows_part = (T_seg.Part == part);
                 T_part = T_seg(rows_part, :);
 
                 %% Extract ROI data
-                roi_values = table2array(T_part(:,8:end)); % ROI columns
+                roi_values = table2array(T_part(:,8:8+length(roi_list))); % ROI columns
                 mean_feat = mean(roi_values, 1);           % mean value per ROI
 
                 %% Prepare atlas for plotting
@@ -171,7 +177,7 @@ function plot_patient_features(patient_info, output_folder, plot_flag)
                 
                 % Title includes segment and part
                 title(sprintf('%s - %s | Segment: %s, Part: %d (%s)', ...
-                    patient_ID, feature, seg, p, unit), ...
+                    patient_ID, feature, seg, part, unit), ...
                     'Interpreter', 'none');
 
                 % Colorbar
@@ -184,8 +190,8 @@ function plot_patient_features(patient_info, output_folder, plot_flag)
                 h.Label.Interpreter = 'tex';
 
                 %% Save figure
-                fig_name = sprintf('%s_Seg%s_Part%d_%s.png', ...
-                    patient_ID, seg, p, feature);
+                fig_name = sprintf('%s_Seg%s_%s_Part%d.png', ...
+                    patient_ID, seg, feature, part);
                 saveas(gcf, fullfile(dir_plots, fig_name));
                 close(gcf);
             end
@@ -193,11 +199,6 @@ function plot_patient_features(patient_info, output_folder, plot_flag)
     end
 
     fprintf('Plots saved to: %s\n', dir_plots);
-
-    %% Save combined table to a single Excel file
-    combined_file = fullfile(dir_results, sprintf('%s_All_Segments_Features.xlsx', patient_ID));
-    writetable(all_data, combined_file);
-    fprintf('Combined table saved to: %s\n', combined_file);
 
 end
 

@@ -223,22 +223,52 @@ function Source_Reconstruction_DKA_MNI(patient_info, dir_output, max_min, plot_f
                 % Formula: X_hat = Gamma * L' * inv(Sigma_y) * Y
                 disp('Computing posterior mean...');
                 X_hat = Gamma_full * LFmatrix' * invSigmaY * Y;  % [3*n_voxels x n_samples]
+
+                % PCA reduction per ROI
+                disp('Reducing voxels 3 orientations → 1 time series per ROI using PCA...');
+
+                ROI_ts = zeros(length(roi_list), n_samples);;
+
+                for i = 1:length(roi_list)
+                    mask = ROI_mask.(roi_list{i});   % logical mask over voxels
+                    vox_idx = find(mask);            % indices of voxels in this ROI
+                    
+                    if isempty(vox_idx)
+                        ROI_ts(i, :) = ones(1, n_samples);
+                        continue
+                    end
+                    
+                    % collect signals from all orientations of selected voxels
+                    idx_all = [];
+                    for v = vox_idx
+                        idx_all = [idx_all, (v-1)*n_dir + (1:n_dir)]; % orientation indices
+                    end
+                    
+                    S_roi = X_hat(idx_all, :);   % [n_sources_in_ROI x n_samples]
+                    
+                    % center across time
+                    S_roi = S_roi - mean(S_roi, 2);
+                    
+                    % PCA via SVD
+                    [U,~,~] = svd(S_roi, 'econ');
+                    ROI_ts(i, :) = U(:,1)' * S_roi; % 1 x n_samples (1st PC)
+                end
                 
                 % PCA reduction per voxel
-                disp('Reducing 3 orientations → 1 time series per voxel using PCA...');
-                voxel_ts = zeros(n_voxels, n_samples);  % final output: [n_voxels x n_samples]
-                
-                for v = 1:n_voxels
-                    idx = (v-1)*n_dir + (1:n_dir);  % indices for the 3 orientations of voxel v (grouped, not interleaved)
-                    S_v = X_hat(idx, :);            % [3 x n_samples]
-                    
-                    % Center the data across time
-                    S_v = S_v - mean(S_v, 2);
-                
-                    % PCA using SVD
-                    [U,~,~] = svd(S_v, 'econ');     % U: [3 x 3]
-                    voxel_ts(v, :) = U(:,1)' * S_v; % Project onto first principal component
-                end
+                % disp('Reducing 3 orientations → 1 time series per voxel using PCA...');
+                % voxel_ts = zeros(n_voxels, n_samples);  % final output: [n_voxels x n_samples]
+                % 
+                % for v = 1:n_voxels
+                %     idx = (v-1)*n_dir + (1:n_dir);  % indices for the 3 orientations of voxel v (grouped, not interleaved)
+                %     S_v = X_hat(idx, :);            % [3 x n_samples]
+                % 
+                %     % Center the data across time
+                %     S_v = S_v - mean(S_v, 2);
+                % 
+                %     % PCA using SVD
+                %     [U,~,~] = svd(S_v, 'econ');     % U: [3 x 3]
+                %     voxel_ts(v, :) = U(:,1)' * S_v; % Project onto first principal component
+                % end
                 
                 disp('Source reconstruction complete');
     
@@ -325,7 +355,7 @@ function Source_Reconstruction_DKA_MNI(patient_info, dir_output, max_min, plot_f
                 %% Compute average bandpower per ROI (source space)
                 disp("Computing average features per ROI...")
     
-                Features_source_EEG = extract_eeg_features(voxel_ts, info, roi_list, ROI_mask);
+                Features_source_EEG = extract_eeg_features(ROI_ts, info, roi_list, []);
                 
                 % Save to Excel
                 excel_filename = fullfile(dir_table, sprintf('%s_Seg%s_Part%d_ROI_Features', patient_ID, segments{i_file}, s));
