@@ -27,7 +27,7 @@ function Source_Reconstruction_DKA_MNI(patient_info, dir_output, max_min, plot_f
     heavy_artifact_rej = false;  % TRUE = Use dipole fitting for ICA artifact rejection
 
     % c.Reconstruction
-    champ_iter = 15;    %[Champagne iterations]
+    champ_iter = 25;    %[Champagne iterations]
     n_dir = 3;          %[Reconstruction directions (x,y,z)]
 
     % c.Spectral Analysis
@@ -183,31 +183,41 @@ function Source_Reconstruction_DKA_MNI(patient_info, dir_output, max_min, plot_f
                 %% === Run Champagne ===
                 Y = segSignal_clean; % channels x samples
                 sigu_init = norm(Y*Y')*eye(size(Y',2))*1e-6;
+
+                
+
+                disp("Running Champagne...")
     
-                % [n_sensors, total_cols] = size(LFmatrix);
-                % n_voxels = total_cols / 3;
-                % 
-                % % Preallocate interleaved leadfield
+                Y = segSignal_clean;   % nk x nt
+
+                [n_sensors, total_cols] = size(LFmatrix);
+                n_voxels = total_cols / n_dir;
+                n_samples = size(Y, 2);                 % number of time samples
+
+                % Noise covariance (rough estimate)
+                Sigma_e = eye(n_sensors) * (trace(Y*Y')/n_sensors) * 1e-3;
+
+                % NUTMEG function
+                % % Reorder LF to interleaved
                 % LF_interleaved = zeros(n_sensors, total_cols);
-                % 
-                % % Reorder from grouped -> interleaved
                 % for v = 1:n_voxels
                 %     LF_interleaved(:, (v-1)*3 + (1:3)) = LFmatrix(:, [v, v + n_voxels, v + 2*n_voxels]);
                 % end
-                % gammainit=ones(n_dir,n_dir,n_voxels);
-                % [Gamma,s,w,cost,k,dGamma]=champagne_plain(Y,LFmatrix,sigu_init,champ_iter,gammainit,n_dir);
+                % 
+                % % Prior Gamma (identity blocks)
+                % Gamma_init = repmat(eye(n_dir), 1, 1, n_voxels);
+                % 
+                % % Run Champagne
+                % [Gamma, X_hat, w, cost, k, dGamma] = champagne_plain(Y, LF_interleaved, Sigma_e, champ_iter, Gamma_init, n_dir);
+
                 
-                disp("Running Champagne...")
-                [Gamma_y,~,~,~,~,Sigma_y] = champ_noise_up(Y, LFmatrix, sigu_init, champ_iter, n_dir, 0, plot_flag, 0, 2, 1, 1e-16);
+                [Gamma_y,~,~,~,~,Sigma_y] = champ_noise_up(Y, LFmatrix, Sigma_e, champ_iter, n_dir, 0, plot_flag, 0, 2, 1, 1e-16);
                 if plot_flag, close(figure(1)); end
-    
+
                 %% Beamformer Source Reconstruction using Champagne Posterior
-                n_voxels  = size(LFmatrix, 2) / n_dir;  % n_dir = number of orientations (usually 3)
-                n_sensors = size(LFmatrix, 1);          % e.g., 19 sensors
-                n_samples = size(Y, 2);                 % number of time samples
-                
+
                 disp(['Number of voxels: ', num2str(n_voxels)]);
-                
+
                 % Build full block-diagonal Gamma (source prior covariance)
                 disp('Building block-diagonal Gamma...');
                 Gamma_blocks = cell(1, n_voxels);
@@ -215,14 +225,21 @@ function Source_Reconstruction_DKA_MNI(patient_info, dir_output, max_min, plot_f
                     Gamma_blocks{v} = Gamma_y(:,:,v);  % 3x3 covariance for voxel v
                 end
                 Gamma_full = blkdiag(Gamma_blocks{:});  % [3*n_voxels x 3*n_voxels]
-                
+
                 % Compute inverse noise covariance
                 invSigmaY = pinv(Sigma_y);  % Regularized inverse may be better for noisy data
-                
-                % Compute posterior mean of sources
-                % Formula: X_hat = Gamma * L' * inv(Sigma_y) * Y
+
+                % Posterior mean (MAP estimate of sources)
                 disp('Computing posterior mean...');
-                X_hat = Gamma_full * LFmatrix' * invSigmaY * Y;  % [3*n_voxels x n_samples]
+                
+                % Compute source posterior covariance term: Sigma_x|y
+                % Reference to David Wipf and Srikantan Nagarajan
+                % (https://doi.org/10.1016/j.neuroimage.2008.02.059)
+
+                % Instead of forming it explicitly, directly compute posterior mean
+                post_filt = Gamma_full * LFmatrix' / (LFmatrix * Gamma_full * LFmatrix' + Sigma_y);
+                
+                X_hat = post_filt * Y;   % [3*n_voxels x n_samples]
 
                 % PCA reduction per ROI
                 disp('Reducing voxels 3 orientations → 1 time series per ROI using PCA...');
