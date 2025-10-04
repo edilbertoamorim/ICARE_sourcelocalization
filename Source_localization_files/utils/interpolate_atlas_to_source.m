@@ -1,4 +1,4 @@
-function [atlas_on_source, source_model] = interpolate_atlas_to_source(leadfdc, insideix, mri, atlas, roi_list, plot_flag)
+function [source_on_mri, atlas_on_source] = interpolate_atlas_to_source(leadfdc, insideix, mri, atlas, roi_list, plot_flag)
 %INTERPOLATE_ATLAS_TO_SOURCE Interpolates atlas labels onto a lead field source space
 % and plots the voxel locations for each ROI.
 %
@@ -30,23 +30,23 @@ function [atlas_on_source, source_model] = interpolate_atlas_to_source(leadfdc, 
 
     % Initialize power vector
     powvec = nan(size(leadfdc.pos, 1), 1);
-    powvec(insideix) = 0;  % assign zero to inside voxels
+    powvec(insideix) = nan;  % assign zero to inside voxels
     src_template.avg.pow = powvec;
 
-    %% --- Interpolate MRI onto source model grid ---
+    %% --- Interpolate MRI onto lead field source model grid ---
     cfg = [];
     cfg.downsample    = 1;
     cfg.interpmethod  = 'nearest';
     cfg.parameter     = 'pow';
     cfg.verbose       = 'no';  % suppress FieldTrip output
-    atlas_on_source = ft_sourceinterpolate(cfg, src_template, mri);
+    source_on_mri = ft_sourceinterpolate(cfg, src_template, mri);
 
     %% --- Interpolate atlas tissue labels onto source grid ---
     cfg = [];
     cfg.interpmethod  = 'nearest';
     cfg.parameter     = 'tissue';
     cfg.verbose       = 'no';
-    source_model = ft_sourceinterpolate(cfg, atlas, atlas_on_source);
+    atlas_on_source = ft_sourceinterpolate(cfg, atlas, source_on_mri);
 
     %% --- Plot voxel masks per ROI ---
     if plot_flag
@@ -54,10 +54,10 @@ function [atlas_on_source, source_model] = interpolate_atlas_to_source(leadfdc, 
             roi_name = roi_list{r};
     
             % Create a copy for plotting
-            atlas_tmp = atlas_on_source;
+            atlas_tmp = source_on_mri;
     
             % Assign value 1 to voxels belonging to this ROI
-            atlas_tmp.pow(source_model.tissue == (r + 1)) = 1;  
+            atlas_tmp.pow(source_model.tissue == r) = 1;
             clim = [0 1];
     
             % Plot the ROI
@@ -68,14 +68,17 @@ function [atlas_on_source, source_model] = interpolate_atlas_to_source(leadfdc, 
             cfg.funcolorlim   = clim;
             cfg.opacitylim    = [clim(1)*0.1, clim(2)];
             cfg.opacitymap    = 'rampup';
-            cfg.maskparameter = 'pow';           % mask background
+            cfg.maskparameter = 'pow';  % mask background
             cfg.locationcoordinates = 'voxel';
             cfg.crosshair     = 'yes';
             cfg.verbose       = 'no';
     
-            figure;
+            figure_handle = figure;
             ft_sourceplot(cfg, atlas_tmp);
             title(roi_name, 'Interpreter', 'none');
+    
+            % Wait for the figure to close before proceeding
+            waitfor(figure_handle);
         end
     end
 end

@@ -39,7 +39,7 @@ function Source_Reconstruction_DKA_MNI(patient_info, dir_output, max_min, plot_f
     leadfield_file = fullfile('Source_localization_files', 'leadfield_output', 'leadfield_19elec.mat');
     load(leadfield_file, 'LFmatrix', 'leadfield', 'inside_idx', 'elec_aligned'); 
     leadfdc = leadfield; insideix = inside_idx; labels=elec_aligned.label;
-    load(fullfile('Source_localization_files', 'MNI_DKA_Standard_Files.mat'), 'atlas');
+    load(fullfile('Source_localization_files', 'Standard_DK_MNI_atlas.mat'), 'atlas');
 
      clear('leadfield','inside_idx', 'elec_aligned') 
 
@@ -67,10 +67,10 @@ function Source_Reconstruction_DKA_MNI(patient_info, dir_output, max_min, plot_f
     [start_file_idx, p_start, last_seg, last_part] = get_resume_point(dir_table, patient_ID, segments);
 
     % --- Prepare ROI structure ---
-    atlas.tissuelabel{10} = 'Third_Ventricle';
-    atlas.tissuelabel{11} = 'Fourth_Ventricle';
-    roi_list = strrep(atlas.tissuelabel(2:end), '-', '_');
-    ROI_struct = cell2struct(cell(length(roi_list),1), roi_list);
+    % atlas.tissuelabel{10} = 'Third_Ventricle';
+    % atlas.tissuelabel{11} = 'Fourth_Ventricle';
+    roi_list = strrep(atlas.tissuelabel, '-', '_');
+    % ROI_struct = cell2struct(cell(length(roi_list),1), roi_list);
 
     % --- Build dummy source model to get voxels mask ---
     ROI_mask = get_ROI_mask(atlas, leadfdc, insideix, roi_list);     
@@ -181,21 +181,16 @@ function Source_Reconstruction_DKA_MNI(patient_info, dir_output, max_min, plot_f
                 clear('Features_plain_EEG','cfg', 'segSignal') 
     
                 %% === Run Champagne ===
-                Y = segSignal_clean; % channels x samples
-                sigu_init = norm(Y*Y')*eye(size(Y',2))*1e-6;
-
-                
-
                 disp("Running Champagne...")
-    
                 Y = segSignal_clean;   % nk x nt
-
+                
                 [n_sensors, total_cols] = size(LFmatrix);
                 n_voxels = total_cols / n_dir;
                 n_samples = size(Y, 2);                 % number of time samples
 
                 % Noise covariance (rough estimate)
                 Sigma_e = eye(n_sensors) * (trace(Y*Y')/n_sensors) * 1e-3;
+                sigu_init = norm(Y*Y')*eye(size(Y',2))*1e-6;
 
                 % NUTMEG function
                 % % Reorder LF to interleaved
@@ -236,14 +231,27 @@ function Source_Reconstruction_DKA_MNI(patient_info, dir_output, max_min, plot_f
                 % Reference to David Wipf and Srikantan Nagarajan
                 % (https://doi.org/10.1016/j.neuroimage.2008.02.059)
 
-                % Instead of forming it explicitly, directly compute posterior mean
                 post_filt = Gamma_full * LFmatrix' / (LFmatrix * Gamma_full * LFmatrix' + Sigma_y);
                 
                 X_hat = post_filt * Y;   % [3*n_voxels x n_samples]
+                
+                % PCA reduction per voxel
+                disp('Reducing 3 orientations → 1 time series per voxel using PCA...');
+                voxel_ts = zeros(n_voxels, n_samples);  % final output: [n_voxels x n_samples]
+
+                for v = 1:n_voxels
+                    idx = (v-1)*n_dir + (1:n_dir);  % indices for the 3 orientations of voxel v (grouped, not interleaved)
+                    S_v = X_hat(idx, :);            % [3 x n_samples]
+
+                    % Center the data across time
+                    S_v = S_v - mean(S_v, 2);
+
+                    % PCA using SVD
+                    [U,~,~] = svd(S_v, 'econ');     % U: [3 x 3]
+                    voxel_ts(v, :) = U(:,1)' * S_v; % Project onto first principal component
+                end
 
                 % PCA reduction per ROI
-                disp('Reducing voxels 3 orientations → 1 time series per ROI using PCA...');
-
                 ROI_ts = zeros(length(roi_list), n_samples);;
 
                 for i = 1:length(roi_list)
@@ -255,13 +263,7 @@ function Source_Reconstruction_DKA_MNI(patient_info, dir_output, max_min, plot_f
                         continue
                     end
                     
-                    % collect signals from all orientations of selected voxels
-                    idx_all = [];
-                    for v = vox_idx
-                        idx_all = [idx_all, (v-1)*n_dir + (1:n_dir)]; % orientation indices
-                    end
-                    
-                    S_roi = X_hat(idx_all, :);   % [n_sources_in_ROI x n_samples]
+                    S_roi = X_hat(vox_idx, :);   % [n_sources_in_ROI x n_samples]
                     
                     % center across time
                     S_roi = S_roi - mean(S_roi, 2);
@@ -270,22 +272,6 @@ function Source_Reconstruction_DKA_MNI(patient_info, dir_output, max_min, plot_f
                     [U,~,~] = svd(S_roi, 'econ');
                     ROI_ts(i, :) = U(:,1)' * S_roi; % 1 x n_samples (1st PC)
                 end
-                
-                % PCA reduction per voxel
-                % disp('Reducing 3 orientations → 1 time series per voxel using PCA...');
-                % voxel_ts = zeros(n_voxels, n_samples);  % final output: [n_voxels x n_samples]
-                % 
-                % for v = 1:n_voxels
-                %     idx = (v-1)*n_dir + (1:n_dir);  % indices for the 3 orientations of voxel v (grouped, not interleaved)
-                %     S_v = X_hat(idx, :);            % [3 x n_samples]
-                % 
-                %     % Center the data across time
-                %     S_v = S_v - mean(S_v, 2);
-                % 
-                %     % PCA using SVD
-                %     [U,~,~] = svd(S_v, 'econ');     % U: [3 x 3]
-                %     voxel_ts(v, :) = U(:,1)' * S_v; % Project onto first principal component
-                % end
                 
                 disp('Source reconstruction complete');
     
@@ -392,34 +378,6 @@ end
 
 %% --- Helper functions ---
 
-% function tbl = load_burst_ranges(files, indices, t_rosc)
-%     tbl = table();
-%     for i = 1:length(indices)
-%         T = readtable(fullfile(files(indices(i)).folder, files(indices(i)).name));
-%         T{:,:} = T{:,:}/100 + t_rosc;
-%         tbl = [tbl; T];
-%     end
-%     tbl.Properties.VariableNames = {'burst_start_index','burst_end_index'};
-% end
-
-% function save_hourly_ROI(patient_ID, feature_name, segment_hour, bursts_included, ROI_struct, dir_csv)
-%     roi_names = fieldnames(ROI_struct);
-%     roi_data = nan(1,numel(roi_names));
-%     for k = 1:numel(roi_names)
-%         vals = ROI_struct.(roi_names{k});
-%         if ~isempty(vals), roi_data(1,k) = vals(end); end
-%     end
-%     row_table = table({feature_name}, segment_hour, bursts_included, ...
-%                       'VariableNames', {'FeatureName','Hour','Bursts_included'});
-%     roi_table = array2table(roi_data, 'VariableNames', roi_names);
-%     row_table = [row_table roi_table];
-%     filename_base = fullfile(dir_csv, [char(patient_ID) '_Signal_ROIs.xlsx']);
-%     if isfile(filename_base)
-%         writetable(row_table, filename_base, 'WriteMode','append','WriteVariableNames',false);
-%     else
-%         writetable(row_table, filename_base);
-%     end
-% end
 
 function [eegFiles, segments] = get_ICARE_EEG_files(patientID)
 %GET_ICARE_EEG_FILES Fetch all EEG filenames for a given patient from PhysioNet.

@@ -17,7 +17,7 @@ function plot_patient_features(patient_info, output_folder, plot_flag)
 %       The script assumes each segment file follows the format:
 %       <patient_ID>_<segment>_ROI_Features.xlsx
 %
-%   The Excel files must have columns:
+%   The Excel files must have columns similar to:
 %       Patient | Segment | Part | Feature_Name | Resolution | CPC | ROI1 | ROI2 | ...
 
     patient_ID = patient_info.Patient;
@@ -34,6 +34,12 @@ function plot_patient_features(patient_info, output_folder, plot_flag)
         mkdir(dir_plots);
     end
 
+    % Create output folder for nifti files
+    dir_nifti = fullfile(output_folder, '05_Niftis');
+    if ~exist(dir_nifti, 'dir')
+        mkdir(dir_nifti);
+    end
+
     %% Locate feature files
     files = dir(fullfile(dir_results, sprintf('%s_*_ROI_Features.xls', patient_ID)));
 
@@ -44,17 +50,22 @@ function plot_patient_features(patient_info, output_folder, plot_flag)
     fprintf('Found %d files for patient %s\n', length(files), patient_ID);
 
     %% Prepare atlas and ROI masks
-    leadfield_file = fullfile('Source_localization_files', 'MNI_DKA_Standard_Files.mat');
-    load(leadfield_file, 'leadfdc', 'insideix', 'atlas');
-    load('Source_localization_files/mri_data.mat', 'mri');
+    leadfield_file = fullfile('Source_localization_files', 'leadfield_output', 'leadfield_19elec.mat');
+    load(leadfield_file, 'leadfield', 'inside_idx'); 
+    leadfdc = leadfield; insideix = inside_idx;
+    load(fullfile('Source_localization_files', 'Standard_DK_MNI_atlas.mat'), 'atlas', 'mri');
+
+    % leadfield_file = fullfile('Source_localization_files', 'MNI_DKA_Standard_Files.mat');
+    % load(leadfield_file, 'leadfdc', 'insideix', 'atlas');
+    % load('Source_localization_files/mri_data.mat', 'mri');
 
     % Add missing tissue labels if required
-    atlas.tissuelabel{10} = 'Third_Ventricle';
-    atlas.tissuelabel{11} = 'Fourth_Ventricle';
-    roi_list = strrep(atlas.tissuelabel(2:end), '-', '_'); 
+    % atlas.tissuelabel{10} = 'Third_Ventricle';
+    % atlas.tissuelabel{11} = 'Fourth_Ventricle';
+    roi_list = strrep(atlas.tissuelabel, '-', '_'); 
 
     % --- Interpolate atlas to source model ---
-    [atlas_on_source, source_model] = interpolate_atlas_to_source(leadfdc, insideix, mri, atlas, roi_list, plot_flag);
+    [source_on_mri, atlas_model] = interpolate_atlas_to_source(leadfdc, insideix, mri, atlas, roi_list, plot_flag);
 
     %% Load and combine feature data
     all_data = [];
@@ -118,25 +129,32 @@ function plot_patient_features(patient_info, output_folder, plot_flag)
                 T_part = T_seg(rows_part, :);
 
                 %% Extract ROI data
-                roi_values = table2array(T_part(:,8:8+length(roi_list))); % ROI columns
+                roi_values = table2array(T_part(:,8:end-1)); % ROI columns
                 mean_feat = mean(roi_values, 1);           % mean value per ROI
 
                 %% Prepare atlas for plotting
 
-                atlas_tmp = atlas_on_source;
+                atlas_tmp = source_on_mri;
                 for r = 1:length(roi_list)
-                    atlas_tmp.pow(source_model.tissue == (r+1)) = mean_feat(r);
+                    atlas_tmp.pow(atlas_model.tissue == (r)) = mean_feat(r);
                 end
-                
-                %% Determine symmetric color limits for dB
-                % Negative values are meaningful in dB, so use symmetric scaling around 0
-                max_abs_val = max(abs(mean_feat));    % strongest magnitude
-                clim = [-max_abs_val, max_abs_val];   % symmetric around zero
 
-                if strcmp(unit, "%")
-                    clim = [0, 100]; end
+                %% Save atlas_tmp as nifti for Surfice
+                % cfg            = [];
+                % cfg.filetype   = 'nifti';
+                % cfg.parameter  = 'pow';    % or 'avg' if changed
+                % cfg.filename   = fullfile(dir_nifti, sprintf('%s_Seg%s_%s_Part%d.nii', ...
+                %     patient_ID, seg, feature, part));
+                % ft_volumewrite(cfg, atlas_tmp);
+
+                %% Determine symmetric color limits for dB
+                % Negative values are in dB, so use symmetric scaling around 0
+                max_abs_val = max(abs(mean_feat));    % strongest magnitude
+                clim = [-max_abs_val max_abs_val];   % symmetric around zero
+                if strcmp(unit, "%")                  % Percentage 1 to 100
+                    clim = [0, 70]; end
                 
-                %% Rename the parameter for FieldTrip (optional but recommended)
+                %% Rename the parameter in avg for FieldTrip (optional)
                 % atlas_tmp.avg = atlas_tmp.pow;   % FieldTrip expects 'avg' for signed data
                 cfg_funparam = 'pow';
                 
@@ -146,7 +164,7 @@ function plot_patient_features(patient_info, output_folder, plot_flag)
                 cfg.funparameter        = cfg_funparam;
                 cfg.funcolormap         = 'jet';      % diverging colormap
                 cfg.funcolorlim         = clim;       
-                cfg.maskparameter       = 'pow';      
+                cfg.maskparameter       = cfg_funparam;      
                 cfg.locationcoordinates = 'voxel';
                 cfg.crosshair           = 'yes';
                 cfg.verbose             = 'no';

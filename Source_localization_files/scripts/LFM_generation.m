@@ -12,14 +12,14 @@
 
 clear; clc;
 
-leadfield_file = 'Source_localization_files/mri_data.mat';
+leadfield_file = 'Source_localization_files/Standard_DK_MNI_atlas.mat';
 load(leadfield_file,  'mri');
 
 ft_defaults
 
 %% Parameters
 output_dir  = 'Source_localization_files/leadfield_output';
-grid_res    = 10;    % mm grid spacing
+grid_res    = 10;     % mm grid spacing
 inwardshift = -1.5;  % push source grid inward to avoid skull boundary
 normalizeLF = 'yes'; % normalize leadfield vectors
 
@@ -54,31 +54,57 @@ else
     elec.tra = eye(length(idx));
 end
 
-%% 4) Align electrodes to MRI
-cfg = [];
-cfg.method = 'interactive';  % if you want GUI, but optional
-cfg.coordsys = 'spm';        % aligns MRI to AC-PC space
-mri_realigned = ft_volumerealign(cfg, mri);
-cfg = [];
-cfg.output = 'scalp';
-segmented = ft_volumesegment(cfg, mri);
+%% 4) Align electrodes to MRI if not in MNI space
 
-% Optional: smooth scalp mesh to help alignment
-scalp_mesh = ft_prepare_mesh([], segmented);
+% cfg = [];
+% cfg.method = 'interactive';  % if you want GUI, but optional
+% cfg.coordsys = 'spm';        % aligns MRI to AC-PC space
+% mri_realigned = ft_volumerealign(cfg, mri);
+% cfg = [];
+% cfg.output = 'scalp';
+% segmented = ft_volumesegment(cfg, mri);
+% 
+% % Optional: smooth scalp mesh to help alignment
+% scalp_mesh = ft_prepare_mesh([], segmented);
 
-% 3) Automatic alignment
-cfg = [];
-cfg.method    = 'headshape';
-cfg.headshape = scalp_mesh; % scalp mesh
-cfg.elec      = elec;
-cfg.warp      = 'rigidbody'; % only translate/rotate
-elec_aligned1 = ft_electroderealign(cfg);
+% % 3) Automatic alignment
+% cfg = [];
+% cfg.method    = 'headshape';
+% cfg.headshape = scalp_mesh; % scalp mesh
+% cfg.elec      = elec;
+% cfg.warp      = 'rigidbody'; % only translate/rotate
+% elec_aligned1 = ft_electroderealign(cfg);
+% 
+%
+% % Manual Alignment
+% % rot_deg     = [0, 0, -88];      % rotation around x, y, z in degrees
+% % scale_factor= [1.2 1.2 1.2];    % scale for x,y,z
+% % translation = [20 10 26];       % translation in mm
+% 
+% rot_deg     = [0, 0, 0];      % rotation around x, y, z in degrees
+% scale_factor= [1 1 1];    % scale for x,y,z
+% translation = [0 0 30];       % translation in mm
+% 
+% elec_aligned = transform_plot_electrodes(elec_aligned1, scalp_mesh, rot_deg, scale_factor, translation);
 
-rot_deg     = [0, 0, -88];      % rotation around x, y, z in degrees
-scale_factor= [1.2 1.2 1.2];    % scale for x,y,z
-translation = [20 10 26];       % translation in mm
+% If already aligned
+elec_aligned = elec; 
 
-elec_aligned = transform_plot_electrodes(elec_aligned1, scalp_mesh, rot_deg, scale_factor, translation);
+        cfg = [];
+        cfg.output = 'scalp';
+        segmented = ft_volumesegment(cfg, mri);
+        
+        % Optional: smooth scalp mesh to help alignment
+        scalp_mesh = ft_prepare_mesh([], segmented);
+        
+        figure;
+        ft_plot_sens(elec, 'label', 'on');
+        hold on;
+        if ~isempty(scalp_mesh)
+            ft_plot_mesh(scalp_mesh, 'facecolor', [0.8 0.8 0.8], 'facealpha', 0.3, 'edgecolor', 'none');
+        end
+        axis equal;
+        title('Transformed Electrodes');
 
 %% 5) Segment MRI and create headmodel
 cfg = [];
@@ -113,9 +139,8 @@ leadfield = ft_prepare_leadfield(cfg);
 %% Convert to numeric matrix [sensors x (voxels * 3)]
 LFmatrix = cell2mat(leadfield.leadfield(inside_idx));
 
-fprintf('Leadfield size: %d sensors x %d columns\n', size(LFmatrix,1), size(LFmatrix,2));
-
-[LFmatrix, inside_idx, removed_idx] = remove_nan_voxels(LFmatrix, inside_idx);
+    fprintf('Leadfield size: %d sensors x %d columns\n', size(LFmatrix,1), size(LFmatrix,2));
+    [LFmatrix, inside_idx, removed_idx] = remove_nan_voxels(LFmatrix, inside_idx);
 
 
 %% 8) Save

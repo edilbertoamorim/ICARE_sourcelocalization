@@ -34,7 +34,7 @@ MIN_DELTA_GAMMA = 1e-10;% Minimum change in norm of gamma needed for early termi
 MIN_GAMMA = 1e-8;          % Minimum value for pruning hyperparameters (to save time)
 MIN_Z_EIGENVALUE = 1e-8;% Minimum eigenvalue of Zi before matrix inversion
 
-IF_PLOT = 0;            % if true, cost, Gamma etc. are plotted each loop
+IF_PLOT = 1;            % if true, cost, Gamma etc. are plotted each loop
 SAVE_OUTPUT = 0;        % export_fig is required for this option. Make sure 
                         % to get it from MatlabCentral before activating it
                         

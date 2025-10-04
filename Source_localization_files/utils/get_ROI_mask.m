@@ -38,8 +38,8 @@ function ROI_mask = get_ROI_mask(atlas, leadfdc, insideix, roi_list)
 
     %% --- Build ROI masks ---
     ROI_mask = struct();
-    for i = 2:length(roi_list)+1  % skip index 1 = 'Other'
+    for i = 1:length(roi_list)  % skip index 1 = 'Other'
         full_mask = atlas_on_source.tissue == i; 
-        ROI_mask.(roi_list{i-1}) = full_mask(insideix); % keep only voxels inside brain
+        ROI_mask.(roi_list{i}) = full_mask(insideix); % keep only voxels inside brain
     end
 end
