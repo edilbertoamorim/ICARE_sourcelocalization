@@ -49,7 +49,7 @@ return
 
 
 
-function [gamma,x,w,like,vvec,c,sigu]=champ_vec(y,f,sigu,nem,nd,vcs,plot_on,coup,noup,ncf, tol);
+function [gamma,x,w,like,vvec,c,sigu]=champ_vec(y,f,sigu,nem,nd,vcs,plot_on,coup,noup,ncf,tol);
 
 eps1=1e-8;
 [nk nvd]=size(f);

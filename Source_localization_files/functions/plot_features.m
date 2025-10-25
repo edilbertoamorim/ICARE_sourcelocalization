@@ -51,21 +51,7 @@ function plot_patient_features(patient_info, output_folder, plot_flag)
 
     %% Prepare atlas and ROI masks
     leadfield_file = fullfile('Source_localization_files', 'leadfield_output', 'leadfield_19elec.mat');
-    load(leadfield_file, 'leadfield', 'inside_idx'); 
-    leadfdc = leadfield; insideix = inside_idx;
-    load(fullfile('Source_localization_files', 'Standard_DK_MNI_atlas.mat'), 'atlas', 'mri');
-
-    % leadfield_file = fullfile('Source_localization_files', 'MNI_DKA_Standard_Files.mat');
-    % load(leadfield_file, 'leadfdc', 'insideix', 'atlas');
-    % load('Source_localization_files/mri_data.mat', 'mri');
-
-    % Add missing tissue labels if required
-    % atlas.tissuelabel{10} = 'Third_Ventricle';
-    % atlas.tissuelabel{11} = 'Fourth_Ventricle';
-    roi_list = strrep(atlas.tissuelabel, '-', '_'); 
-
-    % --- Interpolate atlas to source model ---
-    [source_on_mri, atlas_model] = interpolate_atlas_to_source(leadfdc, insideix, mri, atlas, roi_list, plot_flag);
+    load(leadfield_file, 'source_on_mri', 'roi_list', 'atlas_model'); 
 
     %% Load and combine feature data
     all_data = [];
@@ -91,7 +77,6 @@ function plot_patient_features(patient_info, output_folder, plot_flag)
     fprintf('Combined table saved to: %s\n', combined_file);
 
     %% Identify features and ROIs
-    % roi_names = all_data.Properties.VariableNames(8:end-1);  % ROI columns start at column 8
     feature_names = unique(all_data.Feature_Name);
 
     %% Loop over each feature
@@ -128,70 +113,55 @@ function plot_patient_features(patient_info, output_folder, plot_flag)
                 rows_part = (T_seg.Part == part);
                 T_part = T_seg(rows_part, :);
 
-                %% Extract ROI data
+                % Extract ROI data
                 roi_values = table2array(T_part(:,8:end-1)); % ROI columns
                 mean_feat = mean(roi_values, 1);           % mean value per ROI
 
                 %% Prepare atlas for plotting
 
+                cfg_funparam = 'pow';
+
                 atlas_tmp = source_on_mri;
                 for r = 1:length(roi_list)
-                    atlas_tmp.pow(atlas_model.tissue == (r)) = mean_feat(r);
+                    atlas_tmp.(cfg_funparam)(atlas_model.tissue == r) = mean_feat(r);
                 end
 
-                %% Save atlas_tmp as nifti for Surfice
-                % cfg            = [];
-                % cfg.filetype   = 'nifti';
-                % cfg.parameter  = 'pow';    % or 'avg' if changed
-                % cfg.filename   = fullfile(dir_nifti, sprintf('%s_Seg%s_%s_Part%d.nii', ...
-                %     patient_ID, seg, feature, part));
-                % ft_volumewrite(cfg, atlas_tmp);
-
-                %% Determine symmetric color limits for dB
                 % Negative values are in dB, so use symmetric scaling around 0
                 max_abs_val = max(abs(mean_feat));    % strongest magnitude
                 clim = [-max_abs_val max_abs_val];   % symmetric around zero
-                if strcmp(unit, "%")                  % Percentage 1 to 100
-                    clim = [0, 70]; end
-                
-                %% Rename the parameter in avg for FieldTrip (optional)
+                clim = [min(mean_feat) max(mean_feat)];   % symmetric around zero
+
+                %% Save atlas_tmp as nifti for Surfice if Relative
+                if strcmp(unit, "%")
+                    cfg            = [];
+                    cfg.filetype   = 'nifti';
+                    cfg.parameter  = cfg_funparam;    % or 'avg' if changed
+                    cfg.filename   = fullfile(dir_nifti, sprintf('%s_Seg%s_%s_Part%d.nii', ...
+                                            patient_ID, seg, feature, part));
+                    ft_volumewrite(cfg, atlas_tmp);
+                    clim = [0, 70]; 
+                end
+                   
+                % Rename the parameter in avg for FieldTrip (optional)
                 % atlas_tmp.avg = atlas_tmp.pow;   % FieldTrip expects 'avg' for signed data
-                cfg_funparam = 'pow';
                 
                 %% Plot using FieldTrip
                 cfg = [];
                 cfg.method              = 'slice';
+                cfg.nslices             = 16;
                 cfg.funparameter        = cfg_funparam;
-                cfg.funcolormap         = 'jet';      % diverging colormap
+                cfg.funcolormap         = 'hot';      % diverging colormap
                 cfg.funcolorlim         = clim;       
                 cfg.maskparameter       = cfg_funparam;      
-                cfg.locationcoordinates = 'voxel';
+                cfg.locationcoordinates = 'mni';
                 cfg.crosshair           = 'yes';
                 cfg.verbose             = 'no';
                 cfg.opacitymap          = 'rampup';
-                cfg.opacitylim          = [clim(1) clim(2)];
-                
+                cfg.opacitylim          = [clim(1)-clim(2)/2 clim(2)];
+
                 % figure;
                 fig = figure('Visible','off');
                 ft_sourceplot(cfg, atlas_tmp);
-
-                % OLD PLOTTING - TO BE DELETED LATER
-                % clim = [nanmean(mean_feat)-1.5*nanstd(mean_feat) nanmean(mean_feat)+1.5*nanstd(mean_feat)];
-                % 
-                % %% Plot using FieldTrip
-                % cfg = [];
-                % cfg.method               = 'slice';
-                % cfg.funparameter         = 'pow';
-                % cfg.funcolormap          = 'plasma';
-                % cfg.funcolorlim          = clim;
-                % cfg.maskparameter        = 'pow';
-                % cfg.locationcoordinates  = 'voxel';
-                % cfg.crosshair            = 'yes';
-                % cfg.verbose              = 'no';
-                % 
-                % figure;
-                % ft_sourceplot(cfg, atlas_tmp);
-
                 
                 % Title includes segment and part
                 title(sprintf('%s - %s | Segment: %s, Part: %d (%s)', ...

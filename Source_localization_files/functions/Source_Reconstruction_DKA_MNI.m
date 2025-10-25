@@ -27,19 +27,20 @@ function Source_Reconstruction_DKA_MNI(patient_info, dir_output, max_min, plot_f
     heavy_artifact_rej = false;  % TRUE = Use dipole fitting for ICA artifact rejection
 
     % c.Reconstruction
-    champ_iter = 25;    %[Champagne iterations]
+    champ_iter = 15;    %[Champagne iterations]
     n_dir = 3;          %[Reconstruction directions (x,y,z)]
 
     % c.Spectral Analysis
+    psd_resolution = 1;    %[min] (PSDs - Signal time window [minutes])
     epoch_length = 5;      %[s]
     overlap = 0.5;         %[a.u.]
-    psd_resolution = 1;    %[min] (PSDs - Signal time window [minutes])
+    
 
     % --- Load resources ---
     leadfield_file = fullfile('Source_localization_files', 'leadfield_output', 'leadfield_19elec.mat');
-    load(leadfield_file, 'LFmatrix', 'leadfield', 'inside_idx', 'elec_aligned'); 
-    leadfdc = leadfield; insideix = inside_idx; labels=elec_aligned.label;
-    load(fullfile('Source_localization_files', 'Standard_DK_MNI_atlas.mat'), 'atlas');
+    load(leadfield_file, 'LF_low', 'LF_high', 'elec_aligned', 'roi_list', 'ROI_mask'); 
+
+    labels=elec_aligned.label;
 
      clear('leadfield','inside_idx', 'elec_aligned') 
 
@@ -64,16 +65,7 @@ function Source_Reconstruction_DKA_MNI(patient_info, dir_output, max_min, plot_f
     [eegFiles, segments] = get_ICARE_EEG_files(patient_ID);
 
     % Resume from last feature table produced if existent
-    [start_file_idx, p_start, last_seg, last_part] = get_resume_point(dir_table, patient_ID, segments);
-
-    % --- Prepare ROI structure ---
-    % atlas.tissuelabel{10} = 'Third_Ventricle';
-    % atlas.tissuelabel{11} = 'Fourth_Ventricle';
-    roi_list = strrep(atlas.tissuelabel, '-', '_');
-    % ROI_struct = cell2struct(cell(length(roi_list),1), roi_list);
-
-    % --- Build dummy source model to get voxels mask ---
-    ROI_mask = get_ROI_mask(atlas, leadfdc, insideix, roi_list);     
+    [start_file_idx, p_start, last_seg, last_part] = get_resume_point(dir_table, patient_ID, segments);   
 
     for i_file = start_file_idx:length(eegFiles)
         
@@ -106,7 +98,6 @@ function Source_Reconstruction_DKA_MNI(patient_info, dir_output, max_min, plot_f
 
               try 
 
-    
                 idxStart = (s-1)*samplesPerSeg + 1;
                 idxEnd   = s*samplesPerSeg;
                 
@@ -151,6 +142,7 @@ function Source_Reconstruction_DKA_MNI(patient_info, dir_output, max_min, plot_f
                 cfg = [];
                 cfg.viewmode = 'vertical';
                 cfg.blocksize = tVec_clean(end) - tVec_clean(1);
+                cfg.ylim = [-7 7]*1e3;   % Fixed amplitude scaling (in µV)
                 % Create invisible figure
                 fig = figure('Visible','off');
                 ft_databrowser(cfg, data_fieldtrip);
@@ -184,15 +176,20 @@ function Source_Reconstruction_DKA_MNI(patient_info, dir_output, max_min, plot_f
                 disp("Running Champagne...")
                 Y = segSignal_clean;   % nk x nt
                 
-                [n_sensors, total_cols] = size(LFmatrix);
-                n_voxels = total_cols / n_dir;
-                n_samples = size(Y, 2);                 % number of time samples
+                [n_sensors, total_cols_low] = size(LF_low);
+                n_voxels_low = total_cols_low / n_dir;
+                total_cols_high = size(LF_high,2);
+                n_voxels_high = total_cols_high / n_dir;
+                n_samples = size(Y, 2);      % number of time samples
+
+                disp(['Number of voxels champagne low res: ', num2str(n_voxels_low)]);
+                disp(['Number of voxels reconstruction high res: ', num2str(n_voxels_high)]);
 
                 % Noise covariance (rough estimate)
                 Sigma_e = eye(n_sensors) * (trace(Y*Y')/n_sensors) * 1e-3;
-                sigu_init = norm(Y*Y')*eye(size(Y',2))*1e-6;
-
-                % NUTMEG function
+                % sigu_init = norm(Y*Y')*eye(size(Y',2))*1e-6;
+                
+                % % NUTMEG function
                 % % Reorder LF to interleaved
                 % LF_interleaved = zeros(n_sensors, total_cols);
                 % for v = 1:n_voxels
@@ -201,39 +198,86 @@ function Source_Reconstruction_DKA_MNI(patient_info, dir_output, max_min, plot_f
                 % 
                 % % Prior Gamma (identity blocks)
                 % Gamma_init = repmat(eye(n_dir), 1, 1, n_voxels);
+                % % Generate random noise for diagonals only
+                % noise = 1e-5 * randn(n_dir, n_voxels);
+                % % Add noise to diagonal elements
+                % for j = 1:n_dir
+                %     Gamma_init(j,j,:) = squeeze(Gamma_init(j,j,:)) + noise(j, :).';
+                % end
                 % 
                 % % Run Champagne
                 % [Gamma, X_hat, w, cost, k, dGamma] = champagne_plain(Y, LF_interleaved, Sigma_e, champ_iter, Gamma_init, n_dir);
 
-                
-                [Gamma_y,~,~,~,~,Sigma_y] = champ_noise_up(Y, LFmatrix, Sigma_e, champ_iter, n_dir, 0, plot_flag, 0, 2, 1, 1e-16);
+                % Compute model covariance with low res LF
+                n_voxels = n_voxels_low; 
+                LFmatrix = LF_low;
+
+                [voxel_cov,~,~,~,~,sensors_cov] = champ_noise_up(Y, LFmatrix, Sigma_e, champ_iter, n_dir, 1, plot_flag, 0, 4, 1, 1e-16);
                 if plot_flag, close(figure(1)); end
+
+                % Compute model data covariance Σ_Y = Σ_e + Σ_v L_v α_v L_v'
+                Sigma_Y = sensors_cov;
+
+                for v = 1:n_voxels
+                    L_v = LFmatrix(:, n_dir*(v-1)+1 : n_dir*v);         % [n_sensors x n_dir]
+                    Sigma_Y = Sigma_Y + L_v * voxel_cov(:,:,v) * L_v';  % add each voxel contribution
+                end
 
                 %% Beamformer Source Reconstruction using Champagne Posterior
 
-                disp(['Number of voxels: ', num2str(n_voxels)]);
+                % Reconstruction with high res LF
+                n_voxels = n_voxels_high; 
+                LFmatrix = LF_high;
 
-                % Build full block-diagonal Gamma (source prior covariance)
-                disp('Building block-diagonal Gamma...');
-                Gamma_blocks = cell(1, n_voxels);
-                for v = 1:n_voxels
-                    Gamma_blocks{v} = Gamma_y(:,:,v);  % 3x3 covariance for voxel v
+                disp("Running high resolution beamformer...")
+                
+                % Pre-factorize Σ_Y
+                try
+                    R = chol(Sigma_Y);
+                    solve = @(X) R \ (R' \ X);   % Efficient triangular solve
+                catch
+                    solve = @(X) Sigma_Y \ X;     % Fallback to direct solve
                 end
-                Gamma_full = blkdiag(Gamma_blocks{:});  % [3*n_voxels x 3*n_voxels]
-
-                % Compute inverse noise covariance
-                invSigmaY = pinv(Sigma_y);  % Regularized inverse may be better for noisy data
-
-                % Posterior mean (MAP estimate of sources)
-                disp('Computing posterior mean...');
                 
-                % Compute source posterior covariance term: Sigma_x|y
-                % Reference to David Wipf and Srikantan Nagarajan
-                % (https://doi.org/10.1016/j.neuroimage.2008.02.059)
-
-                post_filt = Gamma_full * LFmatrix' / (LFmatrix * Gamma_full * LFmatrix' + Sigma_y);
+                % Allocate output [n_dir * n_voxels x n_samples]
+                X_hat = zeros(n_dir * n_voxels, n_samples);
                 
-                X_hat = post_filt * Y;   % [3*n_voxels x n_samples]
+                % Loop over voxels and reconstruct
+                for v = 1:n_voxels
+                    col_idx = n_dir*(v-1)+1 : n_dir*v;
+                    L_v = LFmatrix(:, col_idx);              % [n_sensors x n_dir]
+                    
+                    % Compute beamformer weights: W_v = Σ_Y⁻¹ L_v (L_v' Σ_Y⁻¹ L_v)⁻¹
+
+                    nominator   = solve(L_v);                % Σ_Y⁻¹ * L_v
+                    denominator = L_v' * nominator;          % (L_v' Σ_Y⁻¹ L_v)⁻¹ [n_dir x n_dir]
+                    W_v = nominator / denominator;           % [n_sensors x n_dir]
+                    
+                    % Reconstruct source timecourses
+                    X_hat(col_idx, :) = W_v' * Y;            % [n_dir x n_samples]
+                end
+
+                % % Build full block-diagonal Gamma (source prior covariance)
+                % disp('Building block-diagonal Gamma...');
+                % Gamma_blocks = cell(1, n_voxels);
+                % for v = 1:n_voxels
+                %     Gamma_blocks{v} = Gamma_y(:,:,v);  % 3x3 covariance for voxel v
+                % end
+                % Gamma_full = blkdiag(Gamma_blocks{:});  % [3*n_voxels x 3*n_voxels]
+                % 
+                % % Compute inverse noise covariance
+                % invSigmaY = pinv(Sigma_y);  % Regularized inverse may be better for noisy data
+                % 
+                % % Posterior mean (MAP estimate of sources)
+                % disp('Computing posterior mean...');
+                % 
+                % % Compute source posterior covariance term: Sigma_x|y
+                % % Reference to David Wipf and Srikantan Nagarajan
+                % % (https://doi.org/10.1016/j.neuroimage.2008.02.059)
+                % 
+                % post_filt = Gamma_full * LFmatrix' / (LFmatrix * Gamma_full * LFmatrix' + Sigma_y);
+                % 
+                % X_hat = post_filt * Y;   % [3*n_voxels x n_samples]
                 
                 % PCA reduction per voxel
                 disp('Reducing 3 orientations → 1 time series per voxel using PCA...');
@@ -251,27 +295,29 @@ function Source_Reconstruction_DKA_MNI(patient_info, dir_output, max_min, plot_f
                     voxel_ts(v, :) = U(:,1)' * S_v; % Project onto first principal component
                 end
 
-                % PCA reduction per ROI
-                ROI_ts = zeros(length(roi_list), n_samples);;
-
-                for i = 1:length(roi_list)
-                    mask = ROI_mask.(roi_list{i});   % logical mask over voxels
-                    vox_idx = find(mask);            % indices of voxels in this ROI
-                    
-                    if isempty(vox_idx)
-                        ROI_ts(i, :) = ones(1, n_samples);
-                        continue
-                    end
-                    
-                    S_roi = X_hat(vox_idx, :);   % [n_sources_in_ROI x n_samples]
-                    
-                    % center across time
-                    S_roi = S_roi - mean(S_roi, 2);
-                    
-                    % PCA via SVD
-                    [U,~,~] = svd(S_roi, 'econ');
-                    ROI_ts(i, :) = U(:,1)' * S_roi; % 1 x n_samples (1st PC)
-                end
+                % % PCA reduction per ROI
+                % ROI_ts = zeros(length(roi_list), n_samples);
+                % 
+                % for i = 1:length(roi_list)
+                %     roi_list{i};
+                %     mask = ROI_mask.(roi_list{i});   % logical mask over voxels
+                %     vox_idx = find(mask);            % indices of voxels in this ROI
+                % 
+                %     if isempty(vox_idx)
+                %         ROI_ts(i, :) = ones(1, n_samples);
+                %         continue
+                %     end
+                % 
+                %     S_roi = X_hat(vox_idx, :);   % [n_sources_in_ROI x n_samples]
+                % 
+                %     % center across time
+                %     S_roi = S_roi - mean(S_roi, 2);
+                % 
+                %     % PCA via SVD
+                %     [U,~,~] = svd(S_roi, 'econ');
+                %     ROI_ts(i, :) = U(:,1)' * S_roi; % 1 x n_samples (1st PC)
+                % end
+                
                 
                 disp('Source reconstruction complete');
     
@@ -358,7 +404,7 @@ function Source_Reconstruction_DKA_MNI(patient_info, dir_output, max_min, plot_f
                 %% Compute average bandpower per ROI (source space)
                 disp("Computing average features per ROI...")
     
-                Features_source_EEG = extract_eeg_features(ROI_ts, info, roi_list, []);
+                Features_source_EEG = extract_eeg_features(voxel_ts, info, roi_list, ROI_mask);
                 
                 % Save to Excel
                 excel_filename = fullfile(dir_table, sprintf('%s_Seg%s_Part%d_ROI_Features', patient_ID, segments{i_file}, s));

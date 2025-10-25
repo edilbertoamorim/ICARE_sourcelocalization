@@ -34,12 +34,15 @@ function ROI_mask = get_ROI_mask(atlas, leadfdc, insideix, roi_list)
     cfg = [];
     cfg.parameter = 'tissue';        % interpolate tissue labels
     cfg.interpmethod = 'nearest';    % nearest neighbor to preserve discrete labels
+    cfg.verbose       = 'no';        % suppress FieldTrip output
     atlas_on_source = ft_sourceinterpolate(cfg, atlas, src_template);
 
     %% --- Build ROI masks ---
     ROI_mask = struct();
-    for i = 1:length(roi_list)  % skip index 1 = 'Other'
+    for i = 1:length(roi_list) 
         full_mask = atlas_on_source.tissue == i; 
         ROI_mask.(roi_list{i}) = full_mask(insideix); % keep only voxels inside brain
+        % roi_list{i}
+        % sum(full_mask) % See how many voxel for i-th ROI
     end
 end

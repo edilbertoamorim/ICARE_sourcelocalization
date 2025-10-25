@@ -1,15 +1,19 @@
 Data/
 Data/.DS_Store
 .DS_Store
+.asv
 
 eeglab2025.0.0/
 fieldtrip-20250106/
 wfdb-app-toolbox/
 Surfice/
 .DS_Store
+.asv
 
 Source_localization_files/ICARE_patient_metadata.xlsx
 Source_localization_files/Source_loc_time_ROSC_local.xlsx
+Source_localization_files/Z_Original_FeiandGerardo/Source_loc_time_ROSC_local.xlsx
 Source_localization_files/leadfield_output/
+
 
 

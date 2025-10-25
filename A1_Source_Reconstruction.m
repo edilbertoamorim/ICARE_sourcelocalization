@@ -43,7 +43,7 @@ clear; close all; clc;
 %% Configurable variables:
 patient_table = 'ICARE_patient_metadata';
 max_time = 10; % Maximum minutes to analyze per patient file
-VERBOSE = 0;   % Intermediate plot
+VERBOSE = 1;   % Intermediate plot
 
 %% Default variables and allocations
 dir_data = './Data';
