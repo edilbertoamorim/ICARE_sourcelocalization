@@ -41,7 +41,6 @@ clear; close all; clc;
 
 %% Configurable variables:
 patient_table = 'ICARE_patient_metadata';
-VERBOSE = 0; % Intermediate plot
 
 %% Default variables and allocations
 dir_data = './Data';
@@ -78,7 +77,7 @@ for i = 1:length(job_id)
     dir_output = fullfile(dir_data, 'OUTPUT', 'Source_Reconstruction', pid);
 
     try
-        plot_features(patient_info, dir_output, VERBOSE);
+        plot_roi_features(patient_info, dir_output);
     catch ME
         warning(ME.identifier, 'Process failed (%s)', ME.message);
         disp(strcat("Problems with Patient : ", string(pid), " - Skipping..."))

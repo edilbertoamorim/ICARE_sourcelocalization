@@ -10,6 +10,8 @@ Surfice/
 .DS_Store
 .asv
 
+EEG-preprocessing-feature-extraction-main/
+
 Source_localization_files/ICARE_patient_metadata.xlsx
 Source_localization_files/Source_loc_time_ROSC_local.xlsx
 Source_localization_files/Z_Original_FeiandGerardo/Source_loc_time_ROSC_local.xlsx

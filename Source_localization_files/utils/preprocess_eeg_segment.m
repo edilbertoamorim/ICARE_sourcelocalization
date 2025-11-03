@@ -38,13 +38,13 @@ function [segSignal_clean, tVec_new, Fs_new, n_bad_interp] = preprocess_eeg_segm
 
     %% --- 1) Create EEGLAB EEG structure ---
     EEG = eeg_emptyset();
-    EEG.data    = segSignal;
-    EEG.srate   = Fs;
-    EEG.nbchan  = size(segSignal,1);
-    EEG.pnts    = size(segSignal,2);
+    EEG.data     = segSignal;
+    EEG.srate    = Fs;
+    EEG.nbchan   = size(segSignal,1);
+    EEG.pnts     = size(segSignal,2);
     EEG.chanlocs = struct('labels', chanNames(:));
-    EEG.xmin    = 0;
-    EEG.xmax    = (size(segSignal,2)-1)/Fs;
+    EEG.xmin     = 0;
+    EEG.xmax     = (size(segSignal,2)-1)/Fs;
 
     %% --- 2) Load standard 10-20 montage and avgMRI/BESA ---
     eeglab_path = fileparts(which('eeglab'));

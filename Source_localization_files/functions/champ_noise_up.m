@@ -13,6 +13,7 @@
 % gamma(nd,nd,nv) = voxel covariance matrices
 % x(nv*nd,nt) = voxel current density 
 % w(nv*nd,nk) = reconstruction filter
+% c(nk,nk) = model data covariance
 %
 % Input:
 % y(nk,nt) = sensor data 

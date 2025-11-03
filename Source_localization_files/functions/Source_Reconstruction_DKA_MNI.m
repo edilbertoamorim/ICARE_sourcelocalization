@@ -27,11 +27,11 @@ function Source_Reconstruction_DKA_MNI(patient_info, dir_output, max_min, plot_f
     heavy_artifact_rej = false;  % TRUE = Use dipole fitting for ICA artifact rejection
 
     % c.Reconstruction
-    champ_iter = 15;    %[Champagne iterations]
+    champ_iter = 35;    %[Champagne iterations]
     n_dir = 3;          %[Reconstruction directions (x,y,z)]
 
     % c.Spectral Analysis
-    psd_resolution = 1;    %[min] (PSDs - Signal time window [minutes])
+    psd_resolution = 2;    %[min] (PSDs - Signal time window [minutes])
     epoch_length = 5;      %[s]
     overlap = 0.5;         %[a.u.]
     
@@ -125,18 +125,19 @@ function Source_Reconstruction_DKA_MNI(patient_info, dir_output, max_min, plot_f
                     continue;
                 end
 
+                % Optional : rename old channels
+                chanNames{1,13} = 'T7'; % T3
+                chanNames{1,14} = 'T8'; % T4
+                chanNames{1,15} = 'P7'; % T5
+                chanNames{1,16} = 'P8'; % T6
+
                 % --- Convert to FieldTrip format for plotting ---
                 data_fieldtrip = [];
                 data_fieldtrip.trial{1} = segSignal_clean;   % channels × samples
                 data_fieldtrip.time{1}  = tVec_clean;        % seconds
                 data_fieldtrip.label    = chanNames;
                 data_fieldtrip.fsample  = Fs;
-                
-                % --- Optional: rename channels if needed ---
-                % data_fieldtrip.label{1,8}  = 'T7'; % T3
-                % data_fieldtrip.label{1,12} = 'T8'; % T4
-                % data_fieldtrip.label{1,13} = 'P7'; % T5
-                % data_fieldtrip.label{1,17} = 'P8'; % T6
+            
                 
                 % --- Save segment plot ---
                 cfg = [];
@@ -166,6 +167,14 @@ function Source_Reconstruction_DKA_MNI(patient_info, dir_output, max_min, plot_f
                 'overlap', overlap); 
 
                 Features_plain_EEG = extract_eeg_features(segSignal_clean, info, chanNames, []);
+                
+                % tmp_EEG = [];
+                % tmp_EEG.setname = sprintf('%s_Seg%s_Part%d_EEG_Features', patient_ID, segments{i_file}, s);
+                % tmp_EEG.srate = Fs;
+                % tmp_EEG.nbchan = length(chanNames);
+                % tmp_EEG.pnts = size(segSignal_clean,2);
+                % tmp_EEG.data = segSignal_clean;
+                % sensors_features = EEG_extract_feature_chan(tmp_EEG);
 
                 excel_filename = fullfile(dir_table_plain, sprintf('%s_Seg%s_Part%d_EEG_Features', patient_ID, segments{i_file}, s));
                 writetable(Features_plain_EEG, excel_filename, "FileType", "spreadsheet");
@@ -212,7 +221,7 @@ function Source_Reconstruction_DKA_MNI(patient_info, dir_output, max_min, plot_f
                 n_voxels = n_voxels_low; 
                 LFmatrix = LF_low;
 
-                [voxel_cov,~,~,~,~,sensors_cov] = champ_noise_up(Y, LFmatrix, Sigma_e, champ_iter, n_dir, 1, plot_flag, 0, 4, 1, 1e-16);
+                [voxel_cov,~,~,model_cov,~,sensors_cov] = champ_noise_up(Y, LFmatrix, Sigma_e, champ_iter, n_dir, 1, plot_flag, 0, 4, 1, 1e-16);
                 if plot_flag, close(figure(1)); end
 
                 % Compute model data covariance Σ_Y = Σ_e + Σ_v L_v α_v L_v'
@@ -403,6 +412,14 @@ function Source_Reconstruction_DKA_MNI(patient_info, dir_output, max_min, plot_f
                 
                 %% Compute average bandpower per ROI (source space)
                 disp("Computing average features per ROI...")
+
+                % tmp_EEG = [];
+                % tmp_EEG.setname = sprintf('%s_Seg%s_Part%d_ROI_Features', patient_ID, segments{i_file}, s);
+                % tmp_EEG.srate = Fs;
+                % tmp_EEG.nbchan = length(voxel_ts);
+                % tmp_EEG.pnts = size(voxel_ts,2);
+                % tmp_EEG.data = voxel_ts;
+                % sources_features = EEG_extract_feature_chan(tmp_EEG);
     
                 Features_source_EEG = extract_eeg_features(voxel_ts, info, roi_list, ROI_mask);
                 

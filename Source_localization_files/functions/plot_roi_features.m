@@ -1,4 +1,4 @@
-function plot_patient_features(patient_info, output_folder, plot_flag)
+function plot_roi_features(patient_info, output_folder)
 %PLOT_PATIENT_FEATURES Combine and plot EEG feature data for a single patient
 %
 %   plot_patient_features(patient_info, base_folder, plot_flag, unit)
@@ -6,8 +6,6 @@ function plot_patient_features(patient_info, output_folder, plot_flag)
 %   INPUTS:
 %       patient_info - structure with field "Patient" (e.g., patient_info.Patient = '0284')
 %       base_folder  - base directory containing the OUTPUT folder
-%       plot_flag    - logical flag, if true intermediate ROI plots are shown
-%       unit         - 'dB' or 'linear' (default = 'dB')
 %
 %   OUTPUT:
 %       - Saves combined Excel file with all patient segments.
@@ -115,7 +113,7 @@ function plot_patient_features(patient_info, output_folder, plot_flag)
 
                 % Extract ROI data
                 roi_values = table2array(T_part(:,8:end-1)); % ROI columns
-                mean_feat = mean(roi_values, 1);           % mean value per ROI
+                mean_feat = mean(roi_values, 1);             % mean value (useless now)
 
                 %% Prepare atlas for plotting
 
@@ -178,7 +176,7 @@ function plot_patient_features(patient_info, output_folder, plot_flag)
                 h.Label.Interpreter = 'tex';
 
                 %% Save figure
-                fig_name = sprintf('%s_Seg%s_%s_Part%d.png', ...
+                fig_name = sprintf('%s_Seg%s_%s_Part%d_SRC.png', ...
                     patient_ID, seg, feature, part);
                 saveas(gcf, fullfile(dir_plots, fig_name));
                 close(gcf);
