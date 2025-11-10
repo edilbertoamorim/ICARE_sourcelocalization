@@ -13,6 +13,7 @@
 
 clear; clc;
 
+addpath(genpath(fullfile('Source_localization_files')));
 leadfield_file = 'Source_localization_files/Standard_DK_MNI_atlas.mat';
 load(leadfield_file);
 
@@ -34,7 +35,7 @@ end
 
 %% 2) Define the 19 electrodes you want
 elec_labels = {'Fp1','Fp2','F3','F4','C3','C4','P3','P4','O1','O2',...
-               'F7','F8','T3','T4','T5','T6','Fz','Cz','Pz'};
+               'F7','F8','T7','T8','P7','P8','Fz','Cz','Pz'};
 
 %% 3) Compute leadfields and resources 
 

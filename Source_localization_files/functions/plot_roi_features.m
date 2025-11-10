@@ -19,6 +19,8 @@ function plot_roi_features(patient_info, output_folder)
 %       Patient | Segment | Part | Feature_Name | Resolution | CPC | ROI1 | ROI2 | ...
 
     patient_ID = patient_info.Patient;
+    ft_info off
+    % ft_warning off verbose
 
     %% Set up paths
     dir_results = fullfile(output_folder, '03_FeaturesROI');
@@ -78,7 +80,7 @@ function plot_roi_features(patient_info, output_folder)
     feature_names = unique(all_data.Feature_Name);
 
     %% Loop over each feature
-    for f = 1:length(feature_names)
+    for f = 6:length(feature_names)
         feature = feature_names{f};
         
         fprintf('Processing feature: %s\n', feature);
@@ -179,7 +181,11 @@ function plot_roi_features(patient_info, output_folder)
                 fig_name = sprintf('%s_Seg%s_%s_Part%d_SRC.png', ...
                     patient_ID, seg, feature, part);
                 saveas(gcf, fullfile(dir_plots, fig_name));
-                close(gcf);
+                % close(gcf);
+
+                close all force
+                clear atlas_tmp cfg fig
+                drawnow
             end
         end
     end

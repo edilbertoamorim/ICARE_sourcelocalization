@@ -20,6 +20,7 @@ function Source_Reconstruction_DKA_MNI(patient_info, dir_output, max_min, plot_f
 % PSDs mat files.
 
     %ft_defaults
+    ft_info off
 
     % --- Configurations ---
     % c.Preprocessing
@@ -27,11 +28,11 @@ function Source_Reconstruction_DKA_MNI(patient_info, dir_output, max_min, plot_f
     heavy_artifact_rej = false;  % TRUE = Use dipole fitting for ICA artifact rejection
 
     % c.Reconstruction
-    champ_iter = 35;    %[Champagne iterations]
+    champ_iter = 15;    %[Champagne iterations]
     n_dir = 3;          %[Reconstruction directions (x,y,z)]
 
     % c.Spectral Analysis
-    psd_resolution = 2;    %[min] (PSDs - Signal time window [minutes])
+    psd_resolution = 1;    %[min] (PSDs - Signal time window [minutes])
     epoch_length = 5;      %[s]
     overlap = 0.5;         %[a.u.]
     
