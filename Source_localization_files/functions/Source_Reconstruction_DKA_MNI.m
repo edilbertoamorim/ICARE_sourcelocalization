@@ -28,7 +28,7 @@ function Source_Reconstruction_DKA_MNI(patient_info, dir_output, max_min, plot_f
     heavy_artifact_rej = false;  % TRUE = Use dipole fitting for ICA artifact rejection
 
     % c.Reconstruction
-    champ_iter = 15;    %[Champagne iterations]
+    champ_iter = 80;    %[Champagne iterations]
     n_dir = 3;          %[Reconstruction directions (x,y,z)]
 
     % c.Spectral Analysis
@@ -119,7 +119,7 @@ function Source_Reconstruction_DKA_MNI(patient_info, dir_output, max_min, plot_f
                     'LineFreq', utilityFreq);
                 
                 fprintf('Segment %d processed. Bad channels interpolated: %d\n', s, n_bad_interp);
-    
+
                 if n_bad_interp > 5
                     % Skip further processing for segments with too many bad channels
                     fprintf('Skipping segment %d due to excessive bad channels.\n', s);
@@ -197,27 +197,7 @@ function Source_Reconstruction_DKA_MNI(patient_info, dir_output, max_min, plot_f
 
                 % Noise covariance (rough estimate)
                 Sigma_e = eye(n_sensors) * (trace(Y*Y')/n_sensors) * 1e-3;
-                % sigu_init = norm(Y*Y')*eye(size(Y',2))*1e-6;
-                
-                % % NUTMEG function
-                % % Reorder LF to interleaved
-                % LF_interleaved = zeros(n_sensors, total_cols);
-                % for v = 1:n_voxels
-                %     LF_interleaved(:, (v-1)*3 + (1:3)) = LFmatrix(:, [v, v + n_voxels, v + 2*n_voxels]);
-                % end
-                % 
-                % % Prior Gamma (identity blocks)
-                % Gamma_init = repmat(eye(n_dir), 1, 1, n_voxels);
-                % % Generate random noise for diagonals only
-                % noise = 1e-5 * randn(n_dir, n_voxels);
-                % % Add noise to diagonal elements
-                % for j = 1:n_dir
-                %     Gamma_init(j,j,:) = squeeze(Gamma_init(j,j,:)) + noise(j, :).';
-                % end
-                % 
-                % % Run Champagne
-                % [Gamma, X_hat, w, cost, k, dGamma] = champagne_plain(Y, LF_interleaved, Sigma_e, champ_iter, Gamma_init, n_dir);
-
+               
                 % Compute model covariance with low res LF
                 n_voxels = n_voxels_low; 
                 LFmatrix = LF_low;
@@ -266,28 +246,6 @@ function Source_Reconstruction_DKA_MNI(patient_info, dir_output, max_min, plot_f
                     % Reconstruct source timecourses
                     X_hat(col_idx, :) = W_v' * Y;            % [n_dir x n_samples]
                 end
-
-                % % Build full block-diagonal Gamma (source prior covariance)
-                % disp('Building block-diagonal Gamma...');
-                % Gamma_blocks = cell(1, n_voxels);
-                % for v = 1:n_voxels
-                %     Gamma_blocks{v} = Gamma_y(:,:,v);  % 3x3 covariance for voxel v
-                % end
-                % Gamma_full = blkdiag(Gamma_blocks{:});  % [3*n_voxels x 3*n_voxels]
-                % 
-                % % Compute inverse noise covariance
-                % invSigmaY = pinv(Sigma_y);  % Regularized inverse may be better for noisy data
-                % 
-                % % Posterior mean (MAP estimate of sources)
-                % disp('Computing posterior mean...');
-                % 
-                % % Compute source posterior covariance term: Sigma_x|y
-                % % Reference to David Wipf and Srikantan Nagarajan
-                % % (https://doi.org/10.1016/j.neuroimage.2008.02.059)
-                % 
-                % post_filt = Gamma_full * LFmatrix' / (LFmatrix * Gamma_full * LFmatrix' + Sigma_y);
-                % 
-                % X_hat = post_filt * Y;   % [3*n_voxels x n_samples]
                 
                 % PCA reduction per voxel
                 disp('Reducing 3 orientations → 1 time series per voxel using PCA...');
@@ -328,88 +286,86 @@ function Source_Reconstruction_DKA_MNI(patient_info, dir_output, max_min, plot_f
                 %     ROI_ts(i, :) = U(:,1)' * S_roi; % 1 x n_samples (1st PC)
                 % end
                 
-                
                 disp('Source reconstruction complete');
     
                 %% Spectral Analysis
-                % disp("Spectral Analysis...")
-                % % Preallocate PSD storage
-                % % Using pwelch: output will be [n_freqs x n_voxels]
-                % % Compute PSD for the first voxel to get freq vector
-                % n_samples_epoch = epoch_length * Fs;
-                % n_overlap = floor(n_samples_epoch * overlap);
-                % [pxx,freqs] = pwelch(voxel_ts(1,:), n_samples_epoch, n_overlap, n_samples_epoch, Fs);
-                % n_freqs = length(freqs);
-                % psd_voxels = zeros(n_voxels, n_freqs);
-                % psd_voxels(1,:) = pxx';
-                % 
-                % % Compute PSD for all voxels
-                % for v = 2:n_voxels
-                %     [pxx,~] = pwelch(voxel_ts(v,:), n_samples_epoch, n_overlap, n_samples_epoch, Fs);
-                %     psd_voxels(v,:) = pxx';
-                % end
-                % 
-                % % Average PSD per ROI
-                % % atlas.tissue: voxel-to-ROI mapping
-                % % roi_list: list of ROI names (excluding 'Other')
-                % % psd_voxels: [n_voxels x n_freqs] for the current patient
-                % ROI_psd = struct();
-                % 
-                % % Save needed info
-                % ind_freq = freqs<utilityFreq;
-                % freqs=freqs(ind_freq);
-                % ROI_psd.freq=freqs;
-                % ROI_psd.ROI_names=roi_list;
-                % 
-                % for i = 1:length(roi_list)
-                %     mask = ROI_mask.(roi_list{i});
-                %     if any(mask)
-                %         ROI_psd.(roi_list{i}) = mean(psd_voxels(mask,ind_freq),1);
-                %     else
-                %         ROI_psd.(roi_list{i}) = nan(1,length(ind_freq));
-                %     end
-                % end
-                % 
-                % 
-                % % --- Plot 10 random voxel PSDs ---
-                % n_rand = 10;  % number of random PSDs to plot
-                % n_voxels = size(psd_voxels, 1);
-                % 
-                % % Random selection of voxel indices
-                % %rng('shuffle');  % ensures different random picks each run
-                % rand_idx = randperm(n_voxels, min(n_rand, n_voxels));
-                % 
-                % % Plot
-                % fig = figure('Visible','off');
-                % hold on;
-                % for i = 1:length(rand_idx)
-                %     plot(freqs, 10*log10(psd_voxels(rand_idx(i),ind_freq)), 'LineWidth', 1.2);
-                % end
-                % xlabel('Frequency (Hz)');
-                % ylabel('Power (dB)');
-                % title('10 Random Voxel PSDs');
-                % grid on;
-                % hold off;
-                % image_name =sprintf('%s_PSD_%sp%d', patient_ID, segments{i_file}, s);
-                % image_name_full = fullfile(dir_psd,image_name);
-                % saveas(gcf,image_name_full,'png');
-                % close(figure(1));
-                % 
-                % % Save average PSD per ROI
-                % disp("Saving average PSD per ROI")
-                % 
-                % % Build a structure to save
-                % PSD_data = struct();
-                % PSD_data.patient_ID = patient_ID;
-                % PSD_data.psd_resolution = psd_resolution;
-                % PSD_data.CPC = CPC;
-                % PSD_data.freqs = freqs;
-                % PSD_data.ROI_psd = ROI_psd;
-                % 
-                % % Save as .mat
-                % mat_filename = fullfile(dir_psd, sprintf('%s_Seg%s_Part%d_ROI_PSD', patient_ID, segments{i_file}, s));
-                % save(mat_filename, '-struct', 'PSD_data');
-                % disp(['Saved ROI PSD data to: ', mat_filename]);
+                disp("Spectral Analysis...")
+                % Preallocate PSD storage
+                % Using pwelch: output will be [n_freqs x n_voxels]
+                % Compute PSD for the first voxel to get freq vector
+                n_samples_epoch = epoch_length * Fs;
+                n_overlap = floor(n_samples_epoch * overlap);
+                [pxx,freqs] = pwelch(voxel_ts(1,:), n_samples_epoch, n_overlap, n_samples_epoch, Fs);
+                n_freqs = length(freqs);
+                psd_voxels = zeros(n_voxels, n_freqs);
+                psd_voxels(1,:) = pxx';
+
+                % Compute PSD for all voxels
+                for v = 2:n_voxels
+                    [pxx,~] = pwelch(voxel_ts(v,:), n_samples_epoch, n_overlap, n_samples_epoch, Fs);
+                    psd_voxels(v,:) = pxx';
+                end
+
+                % Average PSD per ROI
+                % atlas.tissue: voxel-to-ROI mapping
+                % roi_list: list of ROI names (excluding 'Other')
+                % psd_voxels: [n_voxels x n_freqs] for the current patient
+                PSD_data = struct();
+                ROI_psd = struct();
+
+                % Save needed info
+                ind_freq = freqs<utilityFreq;
+                freqs=freqs(ind_freq);
+
+                for i = 1:length(roi_list)
+                    mask = ROI_mask.(roi_list{i});
+                    if any(mask)
+                        ROI_psd.(roi_list{i}) = mean(psd_voxels(mask,ind_freq),1);
+                    else
+                        ROI_psd.(roi_list{i}) = nan(1,length(ind_freq));
+                    end
+                end
+
+
+                % --- Plot 10 random voxel PSDs ---
+                n_rand = 10;  % number of random PSDs to plot
+                n_rois = size(roi_list, 1);
+
+                % Random selection of voxel indices
+                %rng('shuffle');  % ensures different random picks each run
+                rand_idx = randperm(n_rois, min(n_rand, n_rois));
+
+                % Plot
+                fig = figure('Visible','off');
+                hold on;
+                for i = 1:length(rand_idx)
+                    plot(freqs, 10*log10(ROI_psd.(roi_list{rand_idx(i)})), 'LineWidth', 1.2);
+                end
+                xlabel('Frequency (Hz)');
+                ylabel('Power (dB)');
+                title('10 Random ROI PSDs');
+                grid on;
+                hold off;
+                image_name =sprintf('%s_PSD_%sp%d', patient_ID, segments{i_file}, s);
+                image_name_full = fullfile(dir_psd,image_name);
+                saveas(gcf,image_name_full,'png');
+                close(figure);
+
+                % Save average PSD per ROI
+                disp("Saving average PSD per ROI")
+
+                % Build a structure to save
+                PSD_data.patient_ID = patient_ID;
+                PSD_data.psd_resolution = psd_resolution;
+                PSD_data.CPC = CPC;
+                PSD_data.ROI_names = roi_list;
+                PSD_data.freqs = freqs;
+                PSD_data.ROI_psd = ROI_psd;
+
+                % Save as .mat
+                mat_filename = fullfile(dir_psd, sprintf('%s_Seg%s_Part%d_ROI_PSD', patient_ID, segments{i_file}, s));
+                save(mat_filename, '-struct', 'PSD_data');
+                disp(['Saved ROI PSD data to: ', mat_filename]);
                 
                 %% Compute average bandpower per ROI (source space)
                 disp("Computing average features per ROI...")
