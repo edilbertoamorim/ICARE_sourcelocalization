@@ -1,4 +1,4 @@
-function Source_Reconstruction_DKA_MNI(patient_info, dir_output, max_time, max_segments, plot_flag)
+function Source_Reconstruction_DKA_MNI(split, patient_info, dir_output, max_time, max_segments, plot_flag)
 % SIGNAL_SOURCE_RECONSTRUCTION
 % Performs EEG source reconstruction on raw signals.
 % Runs Champagne, use Beamforming, PCA for dimensionality reduction, and
@@ -30,22 +30,20 @@ function Source_Reconstruction_DKA_MNI(patient_info, dir_output, max_time, max_s
 
     band_pass = [0.5 45];        % Band pass cut-off freqencies [Hz]
 
-    plot_y_scale = [-7 7]*1e3;   % Fixed amplitude scaling [µV]
+    plot_y_scale = [-10 10];   % Fixed amplitude scaling [µV]
 
     % c.Features
     feature_resolution = 30;     % features time resolution [sec]
 
     % c.Spectral Analysis
-    epoch_length = 10;      %[s]
-    overlap = 0.5;         %[a.u.]
+    epoch_length = 4;      %[s]
+    overlap = 0.25;         %[a.u.]
 
     % c.Reconstruction
-    champ_iter = 80;                  %[Champagne iterations]
+    champ_iter = 70;                  %[Champagne iterations]
     n_dir = 3;                        %[Reconstruction directions (x,y,z)]
     reconstruction_resolution = 1;    %[min] (PSDs - Signal time window [minutes])
 
-    
-    
 
     %% --- Load resources ---
     leadfield_file = fullfile('Source_localization_files', 'leadfield_output', 'leadfield_19elec.mat');
@@ -69,74 +67,99 @@ function Source_Reconstruction_DKA_MNI(patient_info, dir_output, max_time, max_s
 
     % --- Preapre data ---
     patient_ID = patient_info.Patient;
-    time_from_ROSC = patient_info.ROSC;
+    % time_from_ROSC = patient_info.ROSC; % useless now
     CPC = patient_info.CPC;
+
+    data_stored = '/wynton/protected/group/amorim-affiliates/ICARE_wfdb_preproc_features/ICA_preproc/';
+    data_folder = fullfile(data_stored, split, patient_ID);
 
     % Get patient filenames from physionet
     [eegFiles, segments] = get_ICARE_EEG_files(patient_ID);
 
     % Resume from last feature table produced if existent
-    [start_file_idx, p_start, last_seg, last_part] = get_resume_point(dir_table, patient_ID, segments); 
+    [start_file_idx, n_analysed] = get_resume_point(dir_table, patient_ID, segments); 
+    
+    % If already analyzed max segments for this patient
+    if n_analysed >= max_segments
+        return
+    end
 
     i_file = start_file_idx;
 
-    while i_file < i_file+3
+    while i_file <= min(length(segments), max_segments)
         
         fprintf('File: %s  | Segment: %s\n', eegFiles{i_file}, segments{i_file});
         file_name_prefix = sprintf('%s_%s_', patient_ID, segments{i_file});
+
+        % Load preprocessed Signal
+        file_dir = string(fullfile(data_folder, eegFiles(i_file)));
+        % file_dir = string(fullfile(data_folder, strcat(file_name_prefix, "EEG_wynton.mat"))); % if not working normal
+        load(file_dir, 'EEG')
     
         % Load EEG (supposed in microvolts)
-        [signal, Fs_acquisition, chanNames, utilityFreq, start_h, ~] = ...
-            load_ICARE_EEG(patient_ID, segments{i_file});
+        % [signal, Fs_acquisition, chanNames, utilityFreq, start_h, ~] = ...
+        %     load_ICARE_EEG(patient_ID, segments{i_file});
+        % 
+        % % If the segment is not long enough skip
+        % if Fs_acquisition*length(signal) < 60*max_time
+        %     disp("Segment too short - Skipping...")
+        %     continue
+        % end
 
-        % If the segment is not long enough skip
-        if Fs_acquisition*length(signal) < 60*max_time
-            disp("Segment too short - Skipping...")
-            continue
-        end
+        signal = EEG.data;
+        time_signal = EEG.times / 1000;
+        chanNames = {EEG.chanlocs.labels};
+        Fs = EEG.srate;
 
-        % Sort and drop channels labels
+        % Sort according to channels labels
         [signal, chanNames] = filter_ch_labels(signal, chanNames, sensor_labels);
 
         % Optional : rename old channels
-        chanNames{1,13} = 'T7'; % T3
-        chanNames{1,14} = 'T8'; % T4
-        chanNames{1,15} = 'P7'; % T5
-        chanNames{1,16} = 'P8'; % T6
-
-        % Convert start time to datetime
-        if strcmp(start_h(1:2), '24')
-            start_h = ['00' start_h(3:end)];  % replace 24 with 00
-            t_start = datetime(start_h, 'InputFormat', 'HH:mm:ss') + days(1);
-        else
-            t_start = datetime(start_h, 'InputFormat', 'HH:mm:ss');
+        for i = 1:numel(chanNames)
+        chanNames{i} = strrep(chanNames{i}, 'T3', 'T7');
+        chanNames{i} = strrep(chanNames{i}, 'T4', 'T8');
+        chanNames{i} = strrep(chanNames{i}, 'T5', 'P7');
+        chanNames{i} = strrep(chanNames{i}, 'T6', 'P8');
         end
+
+        t_start = (i_file-1)*max_time*60;
+
+        % % Convert start time to datetime
+        % if strcmp(start_h(1:2), '24')
+        %     start_h = ['00' start_h(3:end)];  % replace 24 with 00
+        %     t_start = datetime(start_h, 'InputFormat', 'HH:mm:ss') + days(1);
+        % else
+        %     t_start = datetime(start_h, 'InputFormat', 'HH:mm:ss');
+        % end
                 
         % Segmenting EEG into chunks of reconstruction_resolution minutes
-        segment_samples = max_time * 60 * Fs_acquisition;
+        % segment_samples = max_time * 60 * Fs_acquisition;
+        segment_samples = max_time * 60 * Fs;
 
         % Extract segment
-        segment_signal = signal(1:segment_samples+1, :)';
-        clear("signal");
+        segment_signal_clean = signal(1:segment_samples+1, :)';
+        time_clean = time_signal(1:segment_samples+1);
+        clear("signal", "EEG");
         
         try 
         
-        % Preprocess
-        [segment_signal_clean, time_clean, Fs, n_bad_interp] = preprocess_eeg_segment(segment_signal, chanNames, Fs_acquisition, ...
-            'Bandpass', band_pass, ...
-            'Downsample', F_interpolation, ...
-            'BadThresh', 5, ...
-            'useDipoleFit', heavy_artifact_rej, ...
-            'LineFreq', utilityFreq);
+        % % Preprocess
+        % [segment_signal_clean, time_clean, Fs, n_bad_interp] = preprocess_eeg_segment(segment_signal, chanNames, Fs_acquisition, ...
+        %     'Bandpass', band_pass, ...
+        %     'Downsample', F_interpolation, ...
+        %     'BadThresh', 5, ...
+        %     'useDipoleFit', heavy_artifact_rej, ...
+        %     'LineFreq', utilityFreq);
+
         n_samples = size(segment_signal_clean, 2);      % number of time samples
         
-        fprintf('Segment %s processed. Bad channels interpolated: %d\n', segments{i_file}, n_bad_interp);
-
-        if n_bad_interp > 5
-            % Skip further processing for segments with too many bad channels
-            fprintf('Skipping segment %d due to excessive bad channels.\n', s);
-            continue;
-        end
+        % fprintf('Segment %s processed. Bad channels interpolated: %d\n', segments{i_file}, n_bad_interp);
+        % 
+        % if n_bad_interp > 5
+        %     % Skip further processing for segments with too many bad channels
+        %     fprintf('Skipping segment %d due to excessive bad channels.\n', s);
+        %     continue;
+        % end
 
         % Plot signal
         plot_sensors_signals(segment_signal_clean, time_clean, chanNames, Fs, plot_y_scale)

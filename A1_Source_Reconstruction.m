@@ -41,10 +41,12 @@
 clear; close all; clc;
 
 %% Configurable variables:
-PATIENT_TABLE =   'ICARE_patient_metadata';
-MAX_TIME = 5;     % [minutes] Maximum minutes to analyze per patient file (suggested 5 minutes up to 10)
-MAX_SEGMENTS = 3; % [int]     Maximum file number to analyze per patient (use >200 if want to analyse all)
-VERBOSE = 1;      % Intermediate champagne plot
+PATIENT_TABLE  =  'ICARE_patient_metadata';
+MAX_TIME       = 5;     % [minutes] Maximum minutes to analyze per patient file (suggested 5 minutes up to 10)
+MAX_SEGMENTS   = 3;     % [int]     Maximum file number to analyze per patient (use >200 if want to analyse all)
+VERBOSE        = 1;     % Intermediate champagne plot
+split = 'training';     % I-CARE dataset split to look at (only 'training at the moment', ICARE_patient_metadata must be modified)
+
 
 %% Default variables and allocations
 dir_data = './Data';
@@ -80,7 +82,7 @@ for i = 1:length(job_id)
     DIR_OUTPUT = fullfile(dir_data, 'OUTPUT', 'Source_Reconstruction', pid);
 
     try
-        Source_Reconstruction_DKA_MNI(PATIENT_INFO, DIR_OUTPUT, MAX_TIME, MAX_SEGMENTS, VERBOSE);
+        Source_Reconstruction_DKA_MNI(split, PATIENT_INFO, DIR_OUTPUT, MAX_TIME, MAX_SEGMENTS, VERBOSE);
     catch ME
         warning(ME.identifier, 'Process failed (%s)', ME.message);
         disp(strcat("Problems with Patient : ", string(pid), " - Skipping..."))
