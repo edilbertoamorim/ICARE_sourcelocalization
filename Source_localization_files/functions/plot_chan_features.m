@@ -1,8 +1,6 @@
 function plot_chan_features(patient_info, output_folder)
 %PLOT_PATIENT_FEATURES Combine and plot EEG feature data for a single patient
 %
-%   plot_patient_features(patient_info, base_folder, plot_flag, unit)
-%
 %   INPUTS:
 %       patient_info - structure with field "Patient" (e.g., patient_info.Patient = '0284')
 %       base_folder  - base directory containing the OUTPUT folder
@@ -18,7 +16,21 @@ function plot_chan_features(patient_info, output_folder)
 %   The Excel files must have columns similar to:
 %       Patient | Segment | Part | Feature_Name | Resolution | CPC | FP1 | FP2 | ...
 
+    % Setup Resources
     patient_ID = patient_info.Patient;
+
+    leadfield_file = fullfile('Source_localization_files', 'leadfield_output', 'leadfield_19elec.mat');
+    load(leadfield_file, 'elec_aligned'); 
+
+    chanNames=elec_aligned.label;
+
+    % Optional : rename old channels
+    chanNames{13} = 'T7'; % T3
+    chanNames{14} = 'T8'; % T4
+    chanNames{15} = 'P7'; % T5
+    chanNames{16} = 'P8'; % T6
+
+    chanNames=string(chanNames);
 
     %% Set up paths
     dir_results = fullfile(output_folder, '03_FeaturesCHAN');
@@ -115,7 +127,7 @@ function plot_chan_features(patient_info, output_folder)
                 T_part = T_seg(rows_part, :);
 
                 % Extract Channel data
-                chan_values = table2array(T_part(:,8:end-1)); % Channels columns
+                chan_values = table2array(T_part(:,chanNames)); % Channels columns
                 mean_values = mean(chan_values, 1, 'omitnan'); % average if multiple rows per part
 
                 % Plot topomap

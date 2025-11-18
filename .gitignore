@@ -5,6 +5,8 @@ Data/.DS_Store
 
 eeglab2025.0.0/
 fieldtrip-20250106/
+eeglab/
+fieldtrip/
 wfdb-app-toolbox/
 Surfice/
 .DS_Store

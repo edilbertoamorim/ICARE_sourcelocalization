@@ -1,6 +1,6 @@
-function Source_Reconstruction_DKA_MNI(patient_info, dir_output, max_min, plot_flag)
+function Source_Reconstruction_DKA_MNI(patient_info, dir_output, max_time, max_segments, plot_flag)
 % SIGNAL_SOURCE_RECONSTRUCTION
-% Performs EEG source reconstruction on raw signals (hourly segmentation).
+% Performs EEG source reconstruction on raw signals.
 % Runs Champagne, use Beamforming, PCA for dimensionality reduction, and
 % compute and save PSDs (average per ROI)
 %
@@ -10,8 +10,10 @@ function Source_Reconstruction_DKA_MNI(patient_info, dir_output, max_min, plot_f
 %     Patient metadata from physionet.
 % dir_ouput : char
 %     Path to directory for output files.
-% max_min : numeric
+% max_time : numeric
 %     Maximum number of minutes to include in analysis for each file.
+% max_segments : numeric
+%     Maximum number of files per patient to analyse.
 % plot_flag : logical
 %     If true, plots intermidiate figures.
 %
@@ -19,7 +21,6 @@ function Source_Reconstruction_DKA_MNI(patient_info, dir_output, max_min, plot_f
 % ------
 % PSDs mat files.
 
-    %ft_defaults
     ft_info off
 
     % --- Configurations ---
@@ -27,23 +28,32 @@ function Source_Reconstruction_DKA_MNI(patient_info, dir_output, max_min, plot_f
     F_interpolation = 100;       % Resampling Frequency [Hz]
     heavy_artifact_rej = false;  % TRUE = Use dipole fitting for ICA artifact rejection
 
-    % c.Reconstruction
-    champ_iter = 80;    %[Champagne iterations]
-    n_dir = 3;          %[Reconstruction directions (x,y,z)]
+    band_pass = [0.5 45];        % Band pass cut-off freqencies [Hz]
+
+    plot_y_scale = [-7 7]*1e3;   % Fixed amplitude scaling [µV]
+
+    % c.Features
+    feature_resolution = 30;     % features time resolution [sec]
 
     % c.Spectral Analysis
-    psd_resolution = 1;    %[min] (PSDs - Signal time window [minutes])
-    epoch_length = 5;      %[s]
+    epoch_length = 10;      %[s]
     overlap = 0.5;         %[a.u.]
+
+    % c.Reconstruction
+    champ_iter = 80;                  %[Champagne iterations]
+    n_dir = 3;                        %[Reconstruction directions (x,y,z)]
+    reconstruction_resolution = 1;    %[min] (PSDs - Signal time window [minutes])
+
+    
     
 
-    % --- Load resources ---
+    %% --- Load resources ---
     leadfield_file = fullfile('Source_localization_files', 'leadfield_output', 'leadfield_19elec.mat');
     load(leadfield_file, 'LF_low', 'LF_high', 'elec_aligned', 'roi_list', 'ROI_mask'); 
 
-    labels=elec_aligned.label;
+    sensor_labels=elec_aligned.label;
 
-     clear('leadfield','inside_idx', 'elec_aligned') 
+    clear('leadfield','inside_idx', 'elec_aligned') 
 
     % leadfield_file = fullfile('Source_localization_files', 'MNI_DKA_Standard_Files.mat');
     % load(leadfield_file, 'LFmatrix', 'leadfdc', 'insideix', 'atlas', 'labels');
@@ -66,334 +76,276 @@ function Source_Reconstruction_DKA_MNI(patient_info, dir_output, max_min, plot_f
     [eegFiles, segments] = get_ICARE_EEG_files(patient_ID);
 
     % Resume from last feature table produced if existent
-    [start_file_idx, p_start, last_seg, last_part] = get_resume_point(dir_table, patient_ID, segments);   
+    [start_file_idx, p_start, last_seg, last_part] = get_resume_point(dir_table, patient_ID, segments); 
 
-    for i_file = start_file_idx:length(eegFiles)
+    i_file = start_file_idx;
+
+    while i_file < i_file+3
         
         fprintf('File: %s  | Segment: %s\n', eegFiles{i_file}, segments{i_file});
+        file_name_prefix = sprintf('%s_%s_', patient_ID, segments{i_file});
     
         % Load EEG (supposed in microvolts)
-        [signal, Fs_acquisition, chanNames, utilityFreq, start_h, end_h] = ...
+        [signal, Fs_acquisition, chanNames, utilityFreq, start_h, ~] = ...
             load_ICARE_EEG(patient_ID, segments{i_file});
 
+        % If the segment is not long enough skip
+        if Fs_acquisition*length(signal) < 60*max_time
+            disp("Segment too short - Skipping...")
+            continue
+        end
+
         % Sort and drop channels labels
-        [signal, chanNames] = filter_ch_labels(signal, chanNames, labels);
+        [signal, chanNames] = filter_ch_labels(signal, chanNames, sensor_labels);
 
-        % --- Convert start time to datetime ---
-        % if strcmp(start_h(1:2), '24')
-        %     start_h = ['00' start_h(3:end)];  % replace 24 with 00
-        %     tStart = datetime(start_h, 'InputFormat', 'HH:mm:ss') + days(1);
-        % else
-        %     tStart = datetime(start_h, 'InputFormat', 'HH:mm:ss');
-        % end
+        % Optional : rename old channels
+        chanNames{1,13} = 'T7'; % T3
+        chanNames{1,14} = 'T8'; % T4
+        chanNames{1,15} = 'P7'; % T5
+        chanNames{1,16} = 'P8'; % T6
+
+        % Convert start time to datetime
+        if strcmp(start_h(1:2), '24')
+            start_h = ['00' start_h(3:end)];  % replace 24 with 00
+            t_start = datetime(start_h, 'InputFormat', 'HH:mm:ss') + days(1);
+        else
+            t_start = datetime(start_h, 'InputFormat', 'HH:mm:ss');
+        end
                 
-        % --- Segmenting EEG into chunks of psd_resolution minutes ---
-        samplesPerSeg = psd_resolution * 60 * Fs_acquisition;
-        nSeg = floor(size(signal,1) / samplesPerSeg);
+        % Segmenting EEG into chunks of reconstruction_resolution minutes
+        segment_samples = max_time * 60 * Fs_acquisition;
 
-        % If max_min set, process only max_min [minutes] from the start of file
-        if max_min
-            max_nSeg = min(max_min, nSeg*psd_resolution); end
-               
-            for s = p_start:max_nSeg
+        % Extract segment
+        segment_signal = signal(1:segment_samples+1, :)';
+        clear("signal");
+        
+        try 
+        
+        % Preprocess
+        [segment_signal_clean, time_clean, Fs, n_bad_interp] = preprocess_eeg_segment(segment_signal, chanNames, Fs_acquisition, ...
+            'Bandpass', band_pass, ...
+            'Downsample', F_interpolation, ...
+            'BadThresh', 5, ...
+            'useDipoleFit', heavy_artifact_rej, ...
+            'LineFreq', utilityFreq);
+        n_samples = size(segment_signal_clean, 2);      % number of time samples
+        
+        fprintf('Segment %s processed. Bad channels interpolated: %d\n', segments{i_file}, n_bad_interp);
 
-              try 
+        if n_bad_interp > 5
+            % Skip further processing for segments with too many bad channels
+            fprintf('Skipping segment %d due to excessive bad channels.\n', s);
+            continue;
+        end
 
-                idxStart = (s-1)*samplesPerSeg + 1;
-                idxEnd   = s*samplesPerSeg;
-                
-                % Extract segment
-                segSignal = signal(idxStart:idxEnd, :)';
-                
-                % Time vector for this segment (seconds)
-                % tVec = (0:(size(segSignal,2)-1))/Fs;
-                % tVec_datetime = tStart + seconds(tVec);
-                % hourVec = hours(tVec_datetime - tStart);
+        % Plot signal
+        plot_sensors_signals(segment_signal_clean, time_clean, chanNames, Fs, plot_y_scale)
+        
+        image_name_full = fullfile(dir_eegplot, strcat(file_name_prefix, "EEG_signal"));
+        ui_controls = findall(gcf, 'Type', 'uicontrol');
+        delete(ui_controls);
+        saveas(gcf, image_name_full, 'png');
+        close(figure(1)); 
+
+        %% Extract sensor space features
+        features_samples = feature_resolution*Fs;
+        feature_segments = n_samples/features_samples;
+
+        info = struct( ...
+            'Fs', Fs, ...
+            'patientID', char(patient_ID), ...
+            'CPC', CPC, ...
+            't_start', t_start,...
+            'segmentID', segments{i_file}, ...
+            'partID', '', ...
+            'resolution', feature_resolution, ...
+            'epoch_length', epoch_length, ...   % in samples or seconds 
+            'overlap', overlap);
+
+        Features_plain_EEG = [];
+
+        for part = 1:feature_segments
+
+            signal_part_index = (part-1)*features_samples+1:part*features_samples;
+
+            signal_part = segment_signal_clean(:, signal_part_index);
+
+            info.partID = part;
+            info.t_start = info.t_start + seconds((part-1)*feature_resolution);
+            partial_features = extract_eeg_features(signal_part, info, chanNames, []);
+
+            Features_plain_EEG = [Features_plain_EEG; partial_features];
+        end
+  
+        % tmp_EEG = [];
+        % tmp_EEG.setname = strcat(file_name_prefix, "EEG_Features");
+        % tmp_EEG.srate = Fs;
+        % tmp_EEG.nbchan = length(chanNames);
+        % tmp_EEG.pnts = size(segment_signal_clean,2);
+        % tmp_EEG.data = segment_signal_clean;
+        % sensor_features = EEG_extract_feature_chan(tmp_EEG, feature_resolution);
+        % Features_plain_EEG = format_features(sensor_features, info, feature_segments, chanNames);
+
+        excel_filename = fullfile(dir_table_plain, strcat(file_name_prefix, "EEG_Features"));
+        writetable(Features_plain_EEG, excel_filename, "FileType", "spreadsheet");
+
+        clear('Features_plain_EEG','cfg','segment_signal', 'image_name_full', 'partial_features', ...
+              'excel_filename', 'n_bad_interp', 'data_fieldtrip') 
+
+        %% === Run Champagne ===
+        disp("Running Champagne...")
+
+        total_cols_low = size(LF_low,2);
+        total_cols_high = size(LF_high,2);
+    
+        disp(['Number of voxels champagne low res: ', num2str(total_cols_low / n_dir)]);
+        disp(['Number of voxels reconstruction high res: ', num2str(total_cols_high / n_dir)]);
+
+        voxel_ts = zeros(total_cols_high / n_dir, n_samples);
+
+        % Divide the segment in single minutes for reconstruction
+        for reconstruction_minute=1:max_time/reconstruction_resolution
             
-                % Preprocess
-                [segSignal_clean, tVec_clean, Fs, n_bad_interp] = preprocess_eeg_segment(segSignal, chanNames, Fs_acquisition, ...
-                    'Bandpass', [0.5 45], ...
-                    'Downsample', F_interpolation, ...
-                    'BadThresh', 5, ...
-                    'useDipoleFit', heavy_artifact_rej, ...
-                    'LineFreq', utilityFreq);
-                
-                fprintf('Segment %d processed. Bad channels interpolated: %d\n', s, n_bad_interp);
+            reconstruction_index = (reconstruction_minute-1)*60*Fs+1:reconstruction_minute*60*Fs;
 
-                if n_bad_interp > 5
-                    % Skip further processing for segments with too many bad channels
-                    fprintf('Skipping segment %d due to excessive bad channels.\n', s);
-                    continue;
-                end
+            signal_clean_part = segment_signal_clean(:,reconstruction_index);
 
-                % Optional : rename old channels
-                chanNames{1,13} = 'T7'; % T3
-                chanNames{1,14} = 'T8'; % T4
-                chanNames{1,15} = 'P7'; % T5
-                chanNames{1,16} = 'P8'; % T6
+            % Run Reconstruction
+            voxel_ts_part = run_SBL_Beamformer(signal_clean_part, LF_low, LF_high, champ_iter, n_dir, plot_flag);
+            voxel_ts(:,reconstruction_index) = voxel_ts_part;
 
-                % --- Convert to FieldTrip format for plotting ---
-                data_fieldtrip = [];
-                data_fieldtrip.trial{1} = segSignal_clean;   % channels × samples
-                data_fieldtrip.time{1}  = tVec_clean;        % seconds
-                data_fieldtrip.label    = chanNames;
-                data_fieldtrip.fsample  = Fs;
-            
-                
-                % --- Save segment plot ---
-                cfg = [];
-                cfg.viewmode = 'vertical';
-                cfg.blocksize = tVec_clean(end) - tVec_clean(1);
-                cfg.ylim = [-7 7]*1e3;   % Fixed amplitude scaling (in µV)
-                % Create invisible figure
-                fig = figure('Visible','off');
-                ft_databrowser(cfg, data_fieldtrip);
-                
-                image_name_full = fullfile(dir_eegplot, sprintf('%s_EEG_%sp%d', patient_ID, segments{i_file}, s));
-                ui_controls = findall(gcf, 'Type', 'uicontrol');
-                delete(ui_controls);
-                saveas(gcf, image_name_full, 'png');
-                close(figure(1)); 
+        end
 
-                %% Extract sensor space features
-
-                info = struct( ...
-                'Fs', Fs, ...
-                'patientID', patient_ID, ...
-                'CPC', CPC, ...
-                'segmentID', segments{i_file}, ...
-                'partID', s, ...
-                'resolution', psd_resolution, ...
-                'epoch_length', epoch_length, ...   % in samples or seconds 
-                'overlap', overlap); 
-
-                Features_plain_EEG = extract_eeg_features(segSignal_clean, info, chanNames, []);
-                
-                % tmp_EEG = [];
-                % tmp_EEG.setname = sprintf('%s_Seg%s_Part%d_EEG_Features', patient_ID, segments{i_file}, s);
-                % tmp_EEG.srate = Fs;
-                % tmp_EEG.nbchan = length(chanNames);
-                % tmp_EEG.pnts = size(segSignal_clean,2);
-                % tmp_EEG.data = segSignal_clean;
-                % sensors_features = EEG_extract_feature_chan(tmp_EEG);
-
-                excel_filename = fullfile(dir_table_plain, sprintf('%s_Seg%s_Part%d_EEG_Features', patient_ID, segments{i_file}, s));
-                writetable(Features_plain_EEG, excel_filename, "FileType", "spreadsheet");
-
-                clear('Features_plain_EEG','cfg', 'segSignal') 
-    
-                %% === Run Champagne ===
-                disp("Running Champagne...")
-                Y = segSignal_clean;   % nk x nt
-                
-                [n_sensors, total_cols_low] = size(LF_low);
-                n_voxels_low = total_cols_low / n_dir;
-                total_cols_high = size(LF_high,2);
-                n_voxels_high = total_cols_high / n_dir;
-                n_samples = size(Y, 2);      % number of time samples
-
-                disp(['Number of voxels champagne low res: ', num2str(n_voxels_low)]);
-                disp(['Number of voxels reconstruction high res: ', num2str(n_voxels_high)]);
-
-                % Noise covariance (rough estimate)
-                Sigma_e = eye(n_sensors) * (trace(Y*Y')/n_sensors) * 1e-3;
-               
-                % Compute model covariance with low res LF
-                n_voxels = n_voxels_low; 
-                LFmatrix = LF_low;
-
-                [voxel_cov,~,~,model_cov,~,sensors_cov] = champ_noise_up(Y, LFmatrix, Sigma_e, champ_iter, n_dir, 1, plot_flag, 0, 4, 1, 1e-16);
-                if plot_flag, close(figure(1)); end
-
-                % Compute model data covariance Σ_Y = Σ_e + Σ_v L_v α_v L_v'
-                Sigma_Y = sensors_cov;
-
-                for v = 1:n_voxels
-                    L_v = LFmatrix(:, n_dir*(v-1)+1 : n_dir*v);         % [n_sensors x n_dir]
-                    Sigma_Y = Sigma_Y + L_v * voxel_cov(:,:,v) * L_v';  % add each voxel contribution
-                end
-
-                %% Beamformer Source Reconstruction using Champagne Posterior
-
-                % Reconstruction with high res LF
-                n_voxels = n_voxels_high; 
-                LFmatrix = LF_high;
-
-                disp("Running high resolution beamformer...")
-                
-                % Pre-factorize Σ_Y
-                try
-                    R = chol(Sigma_Y);
-                    solve = @(X) R \ (R' \ X);   % Efficient triangular solve
-                catch
-                    solve = @(X) Sigma_Y \ X;     % Fallback to direct solve
-                end
-                
-                % Allocate output [n_dir * n_voxels x n_samples]
-                X_hat = zeros(n_dir * n_voxels, n_samples);
-                
-                % Loop over voxels and reconstruct
-                for v = 1:n_voxels
-                    col_idx = n_dir*(v-1)+1 : n_dir*v;
-                    L_v = LFmatrix(:, col_idx);              % [n_sensors x n_dir]
-                    
-                    % Compute beamformer weights: W_v = Σ_Y⁻¹ L_v (L_v' Σ_Y⁻¹ L_v)⁻¹
-
-                    nominator   = solve(L_v);                % Σ_Y⁻¹ * L_v
-                    denominator = L_v' * nominator;          % (L_v' Σ_Y⁻¹ L_v)⁻¹ [n_dir x n_dir]
-                    W_v = nominator / denominator;           % [n_sensors x n_dir]
-                    
-                    % Reconstruct source timecourses
-                    X_hat(col_idx, :) = W_v' * Y;            % [n_dir x n_samples]
-                end
-                
-                % PCA reduction per voxel
-                disp('Reducing 3 orientations → 1 time series per voxel using PCA...');
-                voxel_ts = zeros(n_voxels, n_samples);  % final output: [n_voxels x n_samples]
-
-                for v = 1:n_voxels
-                    idx = (v-1)*n_dir + (1:n_dir);  % indices for the 3 orientations of voxel v (grouped, not interleaved)
-                    S_v = X_hat(idx, :);            % [3 x n_samples]
-
-                    % Center the data across time
-                    S_v = S_v - mean(S_v, 2);
-
-                    % PCA using SVD
-                    [U,~,~] = svd(S_v, 'econ');     % U: [3 x 3]
-                    voxel_ts(v, :) = U(:,1)' * S_v; % Project onto first principal component
-                end
-
-                % % PCA reduction per ROI
-                % ROI_ts = zeros(length(roi_list), n_samples);
-                % 
-                % for i = 1:length(roi_list)
-                %     roi_list{i};
-                %     mask = ROI_mask.(roi_list{i});   % logical mask over voxels
-                %     vox_idx = find(mask);            % indices of voxels in this ROI
-                % 
-                %     if isempty(vox_idx)
-                %         ROI_ts(i, :) = ones(1, n_samples);
-                %         continue
-                %     end
-                % 
-                %     S_roi = X_hat(vox_idx, :);   % [n_sources_in_ROI x n_samples]
-                % 
-                %     % center across time
-                %     S_roi = S_roi - mean(S_roi, 2);
-                % 
-                %     % PCA via SVD
-                %     [U,~,~] = svd(S_roi, 'econ');
-                %     ROI_ts(i, :) = U(:,1)' * S_roi; % 1 x n_samples (1st PC)
-                % end
-                
-                disp('Source reconstruction complete');
-    
-                %% Spectral Analysis
-                disp("Spectral Analysis...")
-                % Preallocate PSD storage
-                % Using pwelch: output will be [n_freqs x n_voxels]
-                % Compute PSD for the first voxel to get freq vector
-                n_samples_epoch = epoch_length * Fs;
-                n_overlap = floor(n_samples_epoch * overlap);
-                [pxx,freqs] = pwelch(voxel_ts(1,:), n_samples_epoch, n_overlap, n_samples_epoch, Fs);
-                n_freqs = length(freqs);
-                psd_voxels = zeros(n_voxels, n_freqs);
-                psd_voxels(1,:) = pxx';
-
-                % Compute PSD for all voxels
-                for v = 2:n_voxels
-                    [pxx,~] = pwelch(voxel_ts(v,:), n_samples_epoch, n_overlap, n_samples_epoch, Fs);
-                    psd_voxels(v,:) = pxx';
-                end
-
-                % Average PSD per ROI
-                % atlas.tissue: voxel-to-ROI mapping
-                % roi_list: list of ROI names (excluding 'Other')
-                % psd_voxels: [n_voxels x n_freqs] for the current patient
-                PSD_data = struct();
-                ROI_psd = struct();
-
-                % Save needed info
-                ind_freq = freqs<utilityFreq;
-                freqs=freqs(ind_freq);
-
-                for i = 1:length(roi_list)
-                    mask = ROI_mask.(roi_list{i});
-                    if any(mask)
-                        ROI_psd.(roi_list{i}) = mean(psd_voxels(mask,ind_freq),1);
-                    else
-                        ROI_psd.(roi_list{i}) = nan(1,length(ind_freq));
-                    end
-                end
-
-
-                % --- Plot 10 random voxel PSDs ---
-                n_rand = 10;  % number of random PSDs to plot
-                n_rois = size(roi_list, 1);
-
-                % Random selection of voxel indices
-                %rng('shuffle');  % ensures different random picks each run
-                rand_idx = randperm(n_rois, min(n_rand, n_rois));
-
-                % Plot
-                fig = figure('Visible','off');
-                hold on;
-                for i = 1:length(rand_idx)
-                    plot(freqs, 10*log10(ROI_psd.(roi_list{rand_idx(i)})), 'LineWidth', 1.2);
-                end
-                xlabel('Frequency (Hz)');
-                ylabel('Power (dB)');
-                title('10 Random ROI PSDs');
-                grid on;
-                hold off;
-                image_name =sprintf('%s_PSD_%sp%d', patient_ID, segments{i_file}, s);
-                image_name_full = fullfile(dir_psd,image_name);
-                saveas(gcf,image_name_full,'png');
-                close(figure);
-
-                % Save average PSD per ROI
-                disp("Saving average PSD per ROI")
-
-                % Build a structure to save
-                PSD_data.patient_ID = patient_ID;
-                PSD_data.psd_resolution = psd_resolution;
-                PSD_data.CPC = CPC;
-                PSD_data.ROI_names = roi_list;
-                PSD_data.freqs = freqs;
-                PSD_data.ROI_psd = ROI_psd;
-
-                % Save as .mat
-                mat_filename = fullfile(dir_psd, sprintf('%s_Seg%s_Part%d_ROI_PSD', patient_ID, segments{i_file}, s));
-                save(mat_filename, '-struct', 'PSD_data');
-                disp(['Saved ROI PSD data to: ', mat_filename]);
-                
-                %% Compute average bandpower per ROI (source space)
-                disp("Computing average features per ROI...")
-
-                % tmp_EEG = [];
-                % tmp_EEG.setname = sprintf('%s_Seg%s_Part%d_ROI_Features', patient_ID, segments{i_file}, s);
-                % tmp_EEG.srate = Fs;
-                % tmp_EEG.nbchan = length(voxel_ts);
-                % tmp_EEG.pnts = size(voxel_ts,2);
-                % tmp_EEG.data = voxel_ts;
-                % sources_features = EEG_extract_feature_chan(tmp_EEG);
-    
-                Features_source_EEG = extract_eeg_features(voxel_ts, info, roi_list, ROI_mask);
-                
-                % Save to Excel
-                excel_filename = fullfile(dir_table, sprintf('%s_Seg%s_Part%d_ROI_Features', patient_ID, segments{i_file}, s));
-                writetable(Features_source_EEG, excel_filename, "FileType", "spreadsheet");
-                
-                disp(['Saved ROI features to: ', excel_filename]);
-
-
-              catch
-                fprintf("Problems with Segment %s, part %d. Skipping...\n", segments{i_file}, s);
-              end
+        n_voxels = size(voxel_ts, 1);
           
-            end  
-    end
+        disp('Source reconstruction complete');
+
+        %% Spectral Analysis
+        disp("Spectral Analysis...")
+        % Preallocate PSD storage
+        % Using pwelch: output will be [n_freqs x n_voxels]
+        % Compute PSD for the first voxel to get freq vector
+        n_samples_epoch = epoch_length * Fs;
+        n_overlap = floor(n_samples_epoch * overlap);
+        [pxx,freqs] = pwelch(voxel_ts(1,:), n_samples_epoch, n_overlap, n_samples_epoch, Fs);
+        n_freqs = length(freqs);
+        psd_voxels = zeros(n_voxels, n_freqs);
+        psd_voxels(1,:) = pxx';
+
+        % Compute PSD for all voxels
+        for v = 2:n_voxels
+            [pxx,~] = pwelch(voxel_ts(v,:), n_samples_epoch, n_overlap, n_samples_epoch, Fs);
+            psd_voxels(v,:) = pxx';
+        end
+
+        % Average PSD per ROI
+        PSD_data = struct();
+        ROI_psd = struct();
+
+        % Save needed info
+        ind_freq = freqs>0 & freqs<=45;
+        freqs=freqs(ind_freq);
+
+        % Average according to ROI mask
+        for i = 1:length(roi_list)
+            mask = ROI_mask.(roi_list{i});
+            if any(mask)
+                ROI_psd.(roi_list{i}) = mean(psd_voxels(mask,ind_freq),1);
+            else
+                ROI_psd.(roi_list{i}) = nan(1,length(ind_freq));
+            end
+        end
+
+
+        % Plot random ROI PSDs
+        n_rand = 5;  % number of random PSDs to plot
+        n_rois = size(roi_list, 1);
+
+        % Random selection of voxel indices
+        %rng('shuffle');  % ensures different random picks each run
+        rand_idx = randperm(n_rois, min(n_rand, n_rois));
+
+        % Plot
+        fig = figure('Visible','on');
+        for i = 1:length(rand_idx)
+            plot(freqs, 10*log10(ROI_psd.(roi_list{rand_idx(i)})), 'LineWidth', 1.2);
+            hold on;
+        end
+        xlabel('Frequency (Hz)');
+        ylabel('Power (dB)');
+        title('10 Random ROI PSDs');
+        legend({roi_list{rand_idx}})
+        grid on;
+        hold off;
+        image_name =sprintf('%s_PSD_%s', patient_ID, segments{i_file});
+        image_name_full = fullfile(dir_psd,image_name);
+        saveas(gcf,image_name_full,'png');
+        close(figure);
+
+        % Save average PSD per ROI
+        disp("Saving average PSD per ROI")
+
+        % Build a structure to save
+        PSD_data.patient_ID = patient_ID;
+        PSD_data.psd_resolution = max_time;
+        PSD_data.CPC = CPC;
+        PSD_data.ROI_names = roi_list;
+        PSD_data.freqs = freqs;
+        PSD_data.ROI_psd = ROI_psd;
+
+        % Save as .mat
+        mat_filename = fullfile(dir_psd, sprintf('%s_Seg%s_ROI_PSD', patient_ID, segments{i_file}));
+        save(mat_filename, '-struct', 'PSD_data');
+        disp(['Saved ROI PSD data to: ', mat_filename]);
+        
+        %% Compute average bandpower per ROI (source space)
+        disp("Computing average features per ROI...")
+
+        Features_source_EEG = [];
+
+        for part = 1:feature_segments
+
+            signal_part_index = (part-1)*features_samples+1:part*features_samples;
+
+            signal_part = voxel_ts(:, signal_part_index);
+
+            info.partID = part;
+            info.t_start = info.t_start + seconds((part-1)*feature_resolution);
+            partial_features = extract_eeg_features(signal_part, info, roi_list, ROI_mask);
+
+            Features_source_EEG = [Features_source_EEG; partial_features];
+        end
+        
+        % tmp_EEG = [];
+        % tmp_EEG.setname = strcat(file_name_prefix, "ROI_Features");
+        % tmp_EEG.srate = Fs;
+        % tmp_EEG.nbchan = length(voxel_ts);
+        % tmp_EEG.pnts = size(voxel_ts,2);
+        % tmp_EEG.data = voxel_ts;
+        % sources_features = EEG_extract_feature_chan(tmp_EEG);
+        % Features_source_EEG = format_features(sources_features, info, feature_segments, roi_list);
+
+        
+        % Save to Excel
+        excel_filename = fullfile(dir_table, strcat(file_name_prefix, "ROI_Features"));
+        writetable(Features_source_EEG, excel_filename, "FileType", "spreadsheet");
+
+        disp(['Saved ROI features to: ', excel_filename]);
+
+        clear('Features_source_EEG','PSD_data','mat_filename', 'image_name_full', 'partial_features', ...
+              'excel_filename', 'voxel_ts', 'voxel_ts_part', 'ROI_psd', 'fig', 'psd_voxels', 'signal_part', ...
+              'ui_controls', 'time_clean', 'pxx', 'segment_signal_clean', 'signal_clean_part');
+
+        % Next file
+        i_file=i_file+1;
+
+        catch
+        fprintf("Problems with Segment %s. Skipping...\n", segments{i_file});
+        end
+          
+    end  
 end
+
 
 
 %% --- Helper functions ---
@@ -439,4 +391,59 @@ function [eegFiles, segments] = get_ICARE_EEG_files(patientID)
             segments{k} = '';
         end
     end
+end
+
+function formatted_features = format_features(feature_struct, infoStruct, feature_segments, chanNames)
+
+    Fs         = infoStruct.Fs;
+    epochLen   = infoStruct.epoch_length;
+    overlap    = infoStruct.overlap;
+
+    patientID  = infoStruct.patientID;
+    segmentID  = infoStruct.segmentID;
+    CPC        = infoStruct.CPC;
+    resolution = infoStruct.resolution;
+
+    f_names = fieldnames(feature_struct);
+
+    formatted_features = [];
+
+    for part = 1:feature_segments
+        for ft = 1:length(f_names)-1
+
+            ft_name = f_names(ft+1);
+            ft_values = feature_struct.(ft_name{1})(:,part)';
+
+            partID  = part;
+            t_start = infoStruct.t_start + seconds((part-1)*10);
+
+            featTable = table({patientID}, {segmentID}, partID, {CPC}, {t_start}, resolution, Fs, ft_name, "nan", ...
+                'VariableNames', {'Patient','Segment','Part','CPC','Start_Time','Sec_Resolution','Fs','Feature_Name','Unit'});
+            featValues = array2table(ft_values, 'VariableNames', matlab.lang.makeValidName(chanNames));
+
+            partial_feature = [featTable, featValues];
+
+
+            formatted_features = [formatted_features; partial_feature];
+        end
+    end
+
+end
+
+function plot_sensors_signals(segment_signal_clean, time_clean, chanNames, Fs, plot_y_scale)
+    % --- Convert to FieldTrip format for plotting ---
+    data_fieldtrip = [];
+    data_fieldtrip.trial{1} = segment_signal_clean;   % channels × samples
+    data_fieldtrip.time{1}  = time_clean;             % seconds
+    data_fieldtrip.label    = chanNames;
+    data_fieldtrip.fsample  = Fs;
+    
+    % --- Save segment plot ---
+    cfg = [];
+    cfg.viewmode = 'vertical';
+    cfg.blocksize = time_clean(end) - time_clean(1) +1;
+    cfg.ylim = plot_y_scale;   % Fixed amplitude scaling (in µV)
+    % Create invisible figure
+    fig = figure('Visible','off');
+    ft_databrowser(cfg, data_fieldtrip);
 end

@@ -5,18 +5,12 @@
 % Purpose of the code: Map features to DKA from patients EEG
 %
 %   Be sure to have the following toolboxes in the pipeline directory : 
-%           eeglab2025.0.0 
-%           fieldtrip-20250106  
-%           wfdb-app-toolbox
+%           fieldtrip
 %           Source_localization_files (utility folder)
 %    
-%   (if different versions change the version in 'Default variables and allocations' section)
+%   (rename folders accordingly, used toolboxes version is 2024 or later)
 % 
 %   Be sure to have the patient list running Get_patinets_IDs.m 
-% 
-%   Be sure to have the MNI_DKA_Standard_Files.mat file with the LFmatrix, 
-%   atlas, insideix, leadfdc variables needed. These can also be obtained
-%   running LFM_generation.m and manually adjusted.
 % 
 %   Change the .xlm patient table filename if needed in 'patient_table'
 %
@@ -30,11 +24,11 @@
 %
 % Output : 
 %   Located Data/OUTPUT/Source_Reconstruction:
-%       Patient_ID/04_FeaturesPlots   : Figures of mapped features on Atlas  
+%       Patient_ID/04_FeaturesPlots  : Figures of mapped features on Atlas  
 %
 % This code is an adaptation of previous work by 
 % G.Velasquez and running F.Jiang's CHAMPAGNE source localization algorithm 
-% (modified by A.Faloppa)
+% (adapted by A.Faloppa)
 % 
 % Contact details : Amorim De Cerqueira Filho, Edilberto <Edilberto.Amorim@ucsf.edu>
 clear; close all; clc;
@@ -50,9 +44,7 @@ dir_data = './Data';
 baseDir = fileparts(mfilename('fullpath'));
 
 % Add desired subfolders to the path
-% addpath(fullfile(baseDir, 'eeglab2025.0.0'));
-addpath(fullfile(baseDir, 'fieldtrip-20250106'));
-% addpath(fullfile(baseDir, 'fieldtrip-20250106', 'external', 'eeglab'));
+addpath(fullfile(baseDir, 'fieldtrip'));
 addpath(genpath(fullfile(baseDir, 'Source_localization_files')));
 ft_defaults
 

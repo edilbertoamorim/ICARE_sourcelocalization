@@ -21,17 +21,18 @@ Source_localization/
 │
 ├── Data/                             # Example EEG datasets and outputs
 │
-├── eeglab2025.0.0/                   # EEGLAB toolbox (required for preprocessing)
+├── eeglab/                           # EEGLAB toolbox (required for preprocessing)
 │
-├── fieldtrip-20250106/               # FieldTrip toolbox (required for source localization)
+├── fieldtrip/                        # FieldTrip toolbox (required for source localization)
 │
-├── wfdb-app-toolbox/                 # WFDB toolbox (required for physionet data extraction)
+├── wfdb-app-toolbox/                 # WFDB toolbox (required for physionet data extraction) * not working due to toolbox problem
 │
 ├── Source_localization_files/        # Additional scripts & resources for source analysis
 │
 │
-├── A1_Source_Reconstruction.m        # Step 1: Process Patients Data and extract source level features
-├── A2_Plot_Features.m                # Step 2: Plot Features
+├── A1_Source_Reconstruction.m        # Step 1: Process Patients Data and extract features
+├── A2_Plot_Chan_Features.m           # Step 2: Plot Sensor level Features
+├── A2_Plot__ROI_Features.m           # Step 2: Plot Source level Features
 │
 └── README.md                         # This file
 ```
@@ -42,39 +43,41 @@ Source_localization/
 
 ### Step 0.1: Setup
 1. Install MATLAB (R2021b or later recommended).
-2. Add toolboxes to your working folder and MATLAB path (in code):
+2. Add toolboxes (renamed accordingly) to your working folder and MATLAB path (in code):
 
-   addpath('eeglab2025.0.0')  
-   addpath('fieldtrip-20250106')  
+   addpath('eeglab')  
+   addpath('fieldtrip')  
    addpath('wfdb-app-toolbox') 
 
 3. Make sure the following folders are also added to your MATLAB path:  
    - Source_localization_files   
 
 ### Step 0.2: Files Preparation
-- A standard Lead-field matrix is provided
+- In case needed a standard Lead-Field model is provided in Standard_DK_MNI_atlas.mat
 - The file scripts/LFM_generation.m allows personalised generation of forward models starting from individual MRI data in Fieldtrip format. An atlas is also needed (sample DK Atlas provided)
-- Run scripts/Get_patients_ID.m to generate the list of patients to process (this list can be filtered if needed)  
+- Run scripts/Get_patients_ID.m to generate the list of patients to process (this list can be filtered in the script if needed)  
 
 ### Step 1: Process Patients
-- Run A1_Source_localization.m to extract precise start and end times of detected bursts.  
-- **Input:** Source_localization_files/ICARE_patient_metadata.xlsx 
+- Run A1_Source_localization.m to download signals and reconstruct source activity.  
+- **Input:** 
+    Source_localization_files/ICARE_patient_metadata.xlsx (generated)
+    Source_localization_files/leadfield_output (generated) 
 - **Output:** Features and PSDs saved in Data/OUTPUT/Source_Reconstruction/<PATIENT_ID>
 
 > **Note:** If lead fields are not already generated, run LFM_generation.m using mri data and adapting the electrodes to the headmodel (manually) before Step 1.
 
 ### Step 2: Visualize Features
-- Run A2_Plot_Features.m to generate the features maps.  
-- Uses FieldTrip functions and standard pre-computed lead fields.  
-- **Input:** Features Table + MNI lead fields  
+- Run A2_Plot_X_Features.m to generate the features maps.  
+- Uses EEGlab/FieldTrip functions and standard pre-computed lead fields.  
+- **Input:** Features Tables and/or MNI lead fields  
 - **Output:** Figures in Data/OUTPUT/Source_Reconstruction/<PATIENT_ID>/04_figures
 - WARNING : Development...
 
 
 ### Dependencies
 - MATLAB (R2021b or newer)  
-- EEGLAB (included in eeglab2025.0.0 - download: https://sccn.ucsd.edu/eeglab/download.php)  
-- FieldTrip (included in fieldtrip-20250106 - download: https://www.fieldtriptoolbox.org/download/)  
+- EEGLAB (included in eeglab2025 - download: https://sccn.ucsd.edu/eeglab/download.php)  
+- FieldTrip (included in fieldtrip - download: https://www.fieldtriptoolbox.org/download/)  
 - WFDB toolbox for Matlab (version 0.10 or above - https://github.com/ikarosilva/wfdb-app-toolbox?tab=readme-ov-file)  
 
 ### Notes

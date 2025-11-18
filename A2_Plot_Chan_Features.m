@@ -2,19 +2,15 @@
 % Author: A.Faloppa
 % 1/08/2025
 %
-% Purpose of the code: Map features to DKA from patients EEG
+% Purpose of the code: Map features for patients EEG
 %
 %   Be sure to have the following toolboxes in the pipeline directory : 
-%           eeglab2025.0.0
+%           eeglab
 %           Source_localization_files (utility folder)
 %    
-%   (if different versions change the version in 'Default variables and allocations' section)
+%   (rename folders accordingly, used toolboxes version is 2024 or later)
 % 
 %   Be sure to have the patient list running Get_patinets_IDs.m 
-% 
-%   Be sure to have the MNI_DKA_Standard_Files.mat file with the LFmatrix, 
-%   atlas, insideix, leadfdc variables needed. These can also be obtained
-%   running LFM_generation.m and manually adjusted.
 % 
 %   Change the .xlm patient table filename if needed in 'patient_table'
 %
@@ -28,11 +24,11 @@
 %
 % Output : 
 %   Located Data/OUTPUT/Source_Reconstruction:
-%       Patient_ID/04_FeaturesPlots   : Figures of mapped features on Atlas  
+%       Patient_ID/04_FeaturesPlots   : Topoplots of mapped features  
 %
 % This code is an adaptation of previous work by 
 % G.Velasquez and running F.Jiang's CHAMPAGNE source localization algorithm 
-% (modified by A.Faloppa)
+% (adapted by A.Faloppa)
 % 
 % Contact details : Amorim De Cerqueira Filho, Edilberto <Edilberto.Amorim@ucsf.edu>
 clear; close all; clc;
@@ -43,24 +39,18 @@ VERBOSE = 0; % Intermediate plot
 
 %% Default variables and allocations
 dir_data = './Data';
-% dir_input = fullfile(dir_data, dataset_name);
 
 % Get current script folder
 baseDir = fileparts(mfilename('fullpath'));
 
 % Add desired subfolders to the path
-addpath(genpath(fullfile(baseDir, 'eeglab2025.0.0')));
-% addpath(fullfile(baseDir, 'fieldtrip-20250106'));
-% addpath(fullfile(baseDir, 'fieldtrip-20250106', 'external', 'eeglab'));
+addpath(genpath(fullfile(baseDir, 'eeglab')));
 addpath(genpath(fullfile(baseDir, 'Source_localization_files')));
-% ft_defaults
 
 % Get Patient ID
 patient_list = readtable(patient_table);
 job_id = unique(patient_list.Patient);
 
-
-% Run sourcelocalization
 % Loop over each patient
 for i = 1:length(job_id)
 
@@ -71,7 +61,6 @@ for i = 1:length(job_id)
     
     % Convert the row to a struct
     patient_info = table2struct(patient_list(rowIdx, :));
-    
     
     dir_output = fullfile(dir_data, 'OUTPUT', 'Source_Reconstruction', pid);
 

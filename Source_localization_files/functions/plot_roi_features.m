@@ -4,8 +4,8 @@ function plot_roi_features(patient_info, output_folder)
 %   plot_patient_features(patient_info, base_folder, plot_flag, unit)
 %
 %   INPUTS:
-%       patient_info - structure with field "Patient" (e.g., patient_info.Patient = '0284')
-%       base_folder  - base directory containing the OUTPUT folder
+%       patient_info    - structure with field "Patient" (e.g., patient_info.Patient = '0284')
+%       base_folder     - base directory containing the OUTPUT folder
 %
 %   OUTPUT:
 %       - Saves combined Excel file with all patient segments.
@@ -76,11 +76,12 @@ function plot_roi_features(patient_info, output_folder)
     writetable(all_data, combined_file);
     fprintf('Combined table saved to: %s\n', combined_file);
 
-    %% Identify features and ROIs
+    %% Identify features and configurations
     feature_names = unique(all_data.Feature_Name);
+    sec_resolution = unique(all_data.Sec_Resolution);
 
     %% Loop over each feature
-    for f = 6:length(feature_names)
+    for f = 1:length(feature_names)
         feature = feature_names{f};
         
         fprintf('Processing feature: %s\n', feature);
@@ -107,6 +108,7 @@ function plot_roi_features(patient_info, output_folder)
 
             unique_parts = unique(T_seg.Part);
 
+
             for p = 1:length(unique_parts)
                 % Filter by this part
                 part = unique_parts(p); 
@@ -114,8 +116,8 @@ function plot_roi_features(patient_info, output_folder)
                 T_part = T_seg(rows_part, :);
 
                 % Extract ROI data
-                roi_values = table2array(T_part(:,8:end-1)); % ROI columns
-                mean_feat = mean(roi_values, 1);             % mean value (useless now)
+                roi_values = table2array(T_part(:,roi_list)); % ROI columns
+                mean_feat = mean(roi_values, 1);              % mean value (useless now)
 
                 %% Prepare atlas for plotting
 
@@ -136,7 +138,7 @@ function plot_roi_features(patient_info, output_folder)
                     cfg            = [];
                     cfg.filetype   = 'nifti';
                     cfg.parameter  = cfg_funparam;    % or 'avg' if changed
-                    cfg.filename   = fullfile(dir_nifti, sprintf('%s_Seg%s_%s_Part%d.nii', ...
+                    cfg.filename   = fullfile(dir_nifti, sprintf('%s_Seg%s_%s_Part%d.nii.gz', ...
                                             patient_ID, seg, feature, part));
                     ft_volumewrite(cfg, atlas_tmp);
                     clim = [0, 70]; 
@@ -148,7 +150,7 @@ function plot_roi_features(patient_info, output_folder)
                 %% Plot using FieldTrip
                 cfg = [];
                 cfg.method              = 'slice';
-                cfg.nslices             = 16;
+                cfg.nslices             = 12;
                 cfg.funparameter        = cfg_funparam;
                 cfg.funcolormap         = 'hot';      % diverging colormap
                 cfg.funcolorlim         = clim;       
@@ -181,7 +183,7 @@ function plot_roi_features(patient_info, output_folder)
                 fig_name = sprintf('%s_Seg%s_%s_Part%d_SRC.png', ...
                     patient_ID, seg, feature, part);
                 saveas(gcf, fullfile(dir_plots, fig_name));
-                % close(gcf);
+                close(gcf);
 
                 close all force
                 clear atlas_tmp cfg fig

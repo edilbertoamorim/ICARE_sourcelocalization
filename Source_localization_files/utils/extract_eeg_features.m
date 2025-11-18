@@ -11,18 +11,20 @@ function featTable = extract_eeg_features(signal, infoStruct, chanNames, ROI_mas
 %   featTable   - MATLAB table containing features per channel/ROI
 %
 % The table columns are:
-%   ['Patient','CPC','Segment','Part','Resolution','Feature_Name','Unit', <chanNames>]
+%   ['Patient','Segment','Part','CPC','Resolution','Start_Time','Fs','Feature_Name','Unit', <chanNames>]
 
     % Unpack info
     Fs         = infoStruct.Fs;
-    patientID  = infoStruct.patientID;
-    CPC        = infoStruct.CPC;
-    segmentID  = infoStruct.segmentID;
-    partID     = infoStruct.partID;
-    resolution = infoStruct.resolution;
     epochLen   = infoStruct.epoch_length;
     overlap    = infoStruct.overlap;
 
+    patientID  = infoStruct.patientID;
+    segmentID  = infoStruct.segmentID;
+    partID     = infoStruct.partID;
+    CPC        = infoStruct.CPC;
+    resolution = infoStruct.resolution;
+    t_start    = infoStruct.t_start;
+    
     featData = {}; % Initialize featData to store feature information
     % =====================================================================
     % Define features here
@@ -33,7 +35,7 @@ function featTable = extract_eeg_features(signal, infoStruct, chanNames, ROI_mas
 
     % Store each band as row in featData
     for f = 1:numel(bpNames)
-        featData = [featData; {patientID, CPC, segmentID, partID, resolution, bpNames{f}, bpUnits{f}, bpVals(f,:)}];
+        featData = [featData; {patientID, segmentID, partID, CPC, t_start, resolution, Fs, bpNames{f}, bpUnits{f}, bpVals(f,:)}];
     end
 
     %% - Other features..
@@ -42,17 +44,19 @@ function featTable = extract_eeg_features(signal, infoStruct, chanNames, ROI_mas
     % Convert featData into table
     % =====================================================================
     nFeatures = size(featData,1);
-    featMat = cell2mat(cellfun(@(x) reshape(x,1,[]), featData(:,8), 'UniformOutput', false));
+    featMat = cell2mat(cellfun(@(x) reshape(x,1,[]), featData(:,10), 'UniformOutput', false));
     
     featTable = table( ...
         repmat({patientID}, nFeatures,1), ...
-        repmat({CPC}, nFeatures,1), ...
         repmat(segmentID, nFeatures,1), ...
         repmat(partID, nFeatures,1), ...
+        repmat({CPC}, nFeatures,1), ...
+        repmat({t_start}, nFeatures,1), ...
         repmat(resolution, nFeatures,1), ...
-        featData(:,6), ...
-        featData(:,7), ...
-        'VariableNames', {'Patient','CPC','Segment','Part','Resolution','Feature_Name','Unit'});
+        repmat(Fs, nFeatures,1), ...
+        featData(:,8), ...
+        featData(:,9), ...
+        'VariableNames', {'Patient','Segment','Part','CPC','Start_Time','Sec_Resolution','Fs','Feature_Name','Unit'});
     
     featTable = [featTable array2table(featMat, 'VariableNames', matlab.lang.makeValidName(colNames))];
 end
@@ -72,8 +76,9 @@ function [vals, featNames, units, colNames] = compute_bandpowers(signal, Fs, ROI
               'Theta', [6 8.5];
               'Alpha', [8.5 12.5];
               'Beta',  [12.5 30];
-              'Gamma', [30 40] };
-    totalBand = [1.5 40];
+              'Gamma', [30 40] 
+              };
+    totalBand = [1.5 18];
     nBands = size(bands,1);
 
     nChan = size(signal,1);
