@@ -8,7 +8,7 @@
 % Only fieldtrip tool is needed for this script (overlap with eeglab might cause errors)
 % Add to the path Source_localization_files functions
 %
-% Input : mri data (optionally manually loaded in 'mri' - fieldtrip format)
+% Input : mri data (optionally manually loaded in 'mri' - fieldtrip format with ft_read_mri('filename'))
 % Output : File in output_dir
 
 clear; clc;
@@ -22,7 +22,7 @@ ft_defaults
 %% Parameters
 output_dir  = 'Source_localization_files/leadfield_output';
 high_res    = 6;     % mm grid spacing
-low_res     = 10;    % mm grid spacing
+low_res     = 12;    % mm grid spacing
 inwardshift = -0.5;  % push source grid inward to avoid skull boundary
 normalizeLF = 'yes'; % normalize leadfield vectors
 plot_flag   = 0;     % Plot all ROI in different figures (WARNING 86 figures) 
@@ -49,12 +49,10 @@ elec_labels = {'Fp1','Fp2','F3','F4','C3','C4','P3','P4','O1','O2',...
 [LF_high, leadfield_high, inside_high, src_high] = compute_sourcemodel_and_leadfield(mri, elec_aligned, headmodel, high_res, inwardshift, normalizeLF);
 
 % Build dummy source model to get voxels mask
-% atlas.tissuelabel{10} = 'Third_Ventricle';
-% atlas.tissuelabel{11} = 'Fourth_Ventricle';
 roi_list = strrep(atlas.tissuelabel, '-', '_'); 
 
 % Interpolate atlas to source model for plotting
-[source_on_mri, atlas_model, ROI_mask2] = interpolate_atlas_to_source(leadfield_high, inside_high, mri, atlas, roi_list, plot_flag);
+[source_on_mri, atlas_model, ROI_mask] = interpolate_atlas_to_source(leadfield_high, inside_high, mri, atlas, roi_list, plot_flag);
 
 %% 4) Save files
 save(fullfile(output_dir,'leadfield_19elec.mat'), ...

@@ -45,7 +45,7 @@ function plot_chan_features(patient_info, output_folder)
     end
 
     %% Locate feature files
-    files = dir(fullfile(dir_results, sprintf('%s_*_EEG_Features.xls', patient_ID)));
+    files = dir(fullfile(dir_results, sprintf('%s_*_EEG_Features.csv', patient_ID)));
 
     if isempty(files)
         error('No Sensor feature files found for patient %s in folder: %s', patient_ID, dir_results);
@@ -72,7 +72,7 @@ function plot_chan_features(patient_info, output_folder)
     end
 
     % Save combined table to a single Excel file
-    combined_file = fullfile(dir_results, sprintf('%s_All_Segments_Features.xlsx', patient_ID));
+    combined_file = fullfile(dir_results, sprintf('%s_All_Segments_Features.csv', patient_ID));
     writetable(all_data, combined_file);
     fprintf('Combined table saved to: %s\n', combined_file);
 

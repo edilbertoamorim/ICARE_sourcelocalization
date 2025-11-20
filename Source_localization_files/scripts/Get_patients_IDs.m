@@ -13,8 +13,9 @@
 
 % --- Step 1: Define base URL and fetch patient directories ---
 clear; close all; clc;
+split = 'training';
 
-baseURL = 'https://physionet.org/files/i-care/2.1/training/';
+baseURL = strcat('https://physionet.org/files/i-care/2.1/', split, '/');
 listing = webread(baseURL);  % Fetch directory listing
 
 % Extract patient IDs (skip 'RECORD' directory)
@@ -34,7 +35,7 @@ for i = 1:length(patientDirs)
     patientID = patientDirs{i};
     txtURL = sprintf('%s%s/%s.txt', baseURL, patientID, patientID);
 
-    fprintf('Processing patient %s (%d of %d)...\n', patientID, i, length(patientDirs));
+    fprintf('Reading patient %s metadata (%d of %d)...\n', patientID, i, length(patientDirs));
     
     try
         % Read patient metadata text file
@@ -85,12 +86,16 @@ for i = 1:length(patientDirs)
     metaData = [metaData; T];                  % concatenate
 end
 
+filteredData = metaData;
+
 % --- Step 4: Optional Filter ---
-% metaData = metaData(~isnan(metaData.Outcome), :);
+% filteredData = metaData(~isnan(metaData.Outcome), :);
 % filteredData = metaData(metaData.Outcome == "Good", :);
-filteredData = metaData(metaData.CPC == 1, :);
+% filteredData = metaData(metaData.CPC == 1, :);
 
 
 % --- Step 5: Write metadata to Excel file ---
 writetable(filteredData, '../ICARE_patient_metadata.xlsx');
 fprintf('Metadata saved to ICARE_patient_metadata.xlsx\n');
+
+clear('filteredData', 'T', 'data', 'txtLines');

@@ -1,0 +1,38 @@
+% Configuration file for Source Reconstruction SBL-BF pipeline
+
+% Pipeline data management
+max_time       = 5;          % [minutes] Maximum minutes to analyze per patient file (suggested 5 minutes up to 10)
+max_segments   = 3;          % [int]     Maximum file number to analyze per patient (use >200 if want to analyse all)
+
+% Preprocessing
+F_interpolation = 100;       % Resampling Frequency [Hz]
+heavy_artifact_rej = false;  % TRUE = Use dipole fitting for ICA artifact rejection
+
+band_pass = [0.5 45];        % Band pass cut-off frequencies [Hz]
+
+plot_y_scale = [-30 30];     % Fixed amplitude scaling [uV]
+
+% Features
+feature_resolution = 30;         % Features time resolution [sec]
+labels_resolution  = 2;          % Artifact/BCI labels resolution [sec]
+otuput_digit_format = 4;         % csv file Output significant digits
+
+% Band powers definition. Remove all bands if no powers need to be computed
+bands = { 'Delta', [1.5 6]; 'Theta', [6 8.5]; 'Alpha', [8.5 12.5]; 'Beta',  [12.5 30]; 'Gamma', [30 40]};
+total_range = [1.5 40];
+additional_features = [1, 1, 1];  % Additional Features to compute (SIQ, BCI, Signal Amplitide), set bool to 1 if want to comute or 0 if not
+
+% Spectral Analysis
+epoch_length = 4;                % [s]
+overlap = 0.25;                  % [a.u.]
+
+% Reconstruction
+champ_iter = 70;                  % [Champagne iterations]
+n_dir = 3;                        % [Reconstruction orientations (x,y,z)]
+reconstruction_resolution = 1;    % [min] (Champagne Signal time window [minutes])
+
+% Log filename
+log_filename = 'processing_log.txt';
+
+
+

@@ -63,7 +63,7 @@ end
 % 
 % elec_aligned = transform_plot_electrodes(elec_aligned1, scalp_mesh, rot_deg, scale_factor, translation);
 
-% If already aligned
+% If already aligned skip previous part
 elec_aligned = elec; 
 
 cfg = [];
@@ -84,11 +84,11 @@ title('Aligned Electrodes');
 
 %% Segment MRI and create headmodel
 cfg = [];
-cfg.output = {'brain','skull','scalp'};
+cfg.output = {'scalp', 'skull', 'brain'};
 segmented_mri = ft_volumesegment(cfg, mri);
 
 cfg = [];
-cfg.method = 'dipoli';  % or 'singleshell' for faster
+cfg.method = 'bemcp';  % alternative 'dipoli 'or 'singleshell' for more precise
 headmodel = ft_prepare_headmodel(cfg, segmented_mri);
 
 end

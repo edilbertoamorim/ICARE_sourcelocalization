@@ -74,7 +74,7 @@ function [source_on_mri, atlas_on_source, ROI_mask] = interpolate_atlas_to_sourc
         ROI_mask.(roi_list{i}) = full_mask(insideix); % keep only voxels inside brain
 
         % See how many voxel for i-th ROI
-        if plot_flag
+        if sum(full_mask) < 1
             roi_list{i}
             sum(full_mask) 
         end

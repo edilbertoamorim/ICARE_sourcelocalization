@@ -1,4 +1,4 @@
-function Source_Reconstruction_DKA_MNI(split, patient_info, dir_output, max_time, max_segments, plot_flag)
+function Source_Reconstruction_DKA_MNI(split, patient_info, dir_output, plot_flag)
 % SIGNAL_SOURCE_RECONSTRUCTION
 % Performs EEG source reconstruction on raw signals.
 % Runs Champagne, use Beamforming, PCA for dimensionality reduction, and
@@ -6,14 +6,12 @@ function Source_Reconstruction_DKA_MNI(split, patient_info, dir_output, max_time
 %
 % Parameters
 % ----------
+% split : string
+%     split of the I-CARE dataset to analyze
 % patient_info : struct
 %     Patient metadata from physionet.
 % dir_ouput : char
 %     Path to directory for output files.
-% max_time : numeric
-%     Maximum number of minutes to include in analysis for each file.
-% max_segments : numeric
-%     Maximum number of files per patient to analyse.
 % plot_flag : logical
 %     If true, plots intermidiate figures.
 %
@@ -23,27 +21,31 @@ function Source_Reconstruction_DKA_MNI(split, patient_info, dir_output, max_time
 
     ft_info off
 
+    config = read_config('config.txt');
+
     % --- Configurations ---
     % c.Preprocessing
-    F_interpolation = 100;       % Resampling Frequency [Hz]
-    heavy_artifact_rej = false;  % TRUE = Use dipole fitting for ICA artifact rejection
-
-    band_pass = [0.5 45];        % Band pass cut-off freqencies [Hz]
-
-    plot_y_scale = [-10 10];   % Fixed amplitude scaling [µV]
+    F_interpolation       = config.F_interpolation;    % Resampling Frequency [Hz]
+    heavy_artifact_rej    = config.heavy_artifact_rej; % TRUE = Use dipole fitting for ICA artifact rejection
+    band_pass             = config.band_pass;          % Band pass cut-off freqencies [Hz]
+    plot_y_scale          = config.plot_y_scale;       % Fixed amplitude scaling [µV]
 
     % c.Features
-    feature_resolution = 30;     % features time resolution [sec]
+    feature_resolution    = config.feature_resolution; % features time resolution [sec]
+    labels_resolution     = config.labels_resolution;  % Artifact/BCI lables resolution [sec]
+    output_digits         = config.otuput_digit_format;
 
     % c.Spectral Analysis
-    epoch_length = 4;      %[s]
-    overlap = 0.25;         %[a.u.]
+    epoch_length          = config.epoch_length;      % [sec]
+    overlap               = config.overlap;           % [a.u.]
 
     % c.Reconstruction
-    champ_iter = 70;                  %[Champagne iterations]
-    n_dir = 3;                        %[Reconstruction directions (x,y,z)]
-    reconstruction_resolution = 1;    %[min] (PSDs - Signal time window [minutes])
+    champ_iter            = config.champ_iter; %[Champagne iterations]
+    n_dir                 = config.n_dir;      %[Reconstruction orientations (x,y,z)]
+    reconstruction_resolution = config.reconstruction_resolution;  %[min] (Champagne Signal time window [minutes])   
 
+    % Log filename
+    log_filename = config.log_filename;
 
     %% --- Load resources ---
     leadfield_file = fullfile('Source_localization_files', 'leadfield_output', 'leadfield_19elec.mat');
@@ -67,11 +69,14 @@ function Source_Reconstruction_DKA_MNI(split, patient_info, dir_output, max_time
 
     % --- Preapre data ---
     patient_ID = patient_info.Patient;
-    % time_from_ROSC = patient_info.ROSC; % useless now
+    time_from_ROSC = patient_info.ROSC;
     CPC = patient_info.CPC;
 
     data_stored = '/wynton/protected/group/amorim-affiliates/ICARE_wfdb_preproc_features/ICA_preproc/';
     data_folder = fullfile(data_stored, split, patient_ID);
+
+    labels_stored = '/wynton/protected/group/amorim-phi/ZackYin/wfdb/labels+artifact/';
+    labels_folder = fullfile(labels_stored, split, patient_ID);
 
     % Get patient filenames from physionet
     [eegFiles, segments] = get_ICARE_EEG_files(patient_ID);
@@ -80,28 +85,36 @@ function Source_Reconstruction_DKA_MNI(split, patient_info, dir_output, max_time
     [start_file_idx, n_analysed] = get_resume_point(dir_table, patient_ID, segments); 
     
     % If already analyzed max segments for this patient
-    if n_analysed >= max_segments
+    if n_analysed >= config.max_segments
         return
     end
 
     i_file = start_file_idx;
 
-    while i_file <= min(length(segments), max_segments)
+    text = sprintf('Start preprocessing %s', patient_ID);
+    write_log(log_filename, text, 0);
+
+    while n_analysed <= min(length(segments)-1, config.max_segments)
+
+        % Start timer
+        tStart = tic;
         
         fprintf('File: %s  | Segment: %s\n', eegFiles{i_file}, segments{i_file});
         file_name_prefix = sprintf('%s_%s_', patient_ID, segments{i_file});
 
         % Load preprocessed Signal
-        file_dir = string(fullfile(data_folder, eegFiles(i_file)));
-        % file_dir = string(fullfile(data_folder, strcat(file_name_prefix, "EEG_wynton.mat"))); % if not working normal
-        load(file_dir, 'EEG')
+        file_dir = string(fullfile(data_folder, strcat(file_name_prefix, 'EEG.mat')));
+        load(file_dir, 'EEG');
+
+        labels_dir = string(fullfile(labels_folder, strcat(file_name_prefix, 'final_labels_with_artifact.csv')));
+        eeg_labels = readtable(labels_dir);
     
         % Load EEG (supposed in microvolts)
         % [signal, Fs_acquisition, chanNames, utilityFreq, start_h, ~] = ...
         %     load_ICARE_EEG(patient_ID, segments{i_file});
         % 
         % % If the segment is not long enough skip
-        % if Fs_acquisition*length(signal) < 60*max_time
+        % if Fs_acquisition*length(signal) < 60*config.max_time
         %     disp("Segment too short - Skipping...")
         %     continue
         % end
@@ -122,7 +135,7 @@ function Source_Reconstruction_DKA_MNI(split, patient_info, dir_output, max_time
         chanNames{i} = strrep(chanNames{i}, 'T6', 'P8');
         end
 
-        t_start = (i_file-1)*max_time*60;
+        t_start = seconds((i_file-1)*config.max_time*60);
 
         % % Convert start time to datetime
         % if strcmp(start_h(1:2), '24')
@@ -133,8 +146,8 @@ function Source_Reconstruction_DKA_MNI(split, patient_info, dir_output, max_time
         % end
                 
         % Segmenting EEG into chunks of reconstruction_resolution minutes
-        % segment_samples = max_time * 60 * Fs_acquisition;
-        segment_samples = max_time * 60 * Fs;
+        % segment_samples = config.max_time * 60 * Fs_acquisition;
+        segment_samples = config.max_time * 60 * Fs;
 
         % Extract segment
         segment_signal_clean = signal(1:segment_samples+1, :)';
@@ -145,10 +158,10 @@ function Source_Reconstruction_DKA_MNI(split, patient_info, dir_output, max_time
         
         % % Preprocess
         % [segment_signal_clean, time_clean, Fs, n_bad_interp] = preprocess_eeg_segment(segment_signal, chanNames, Fs_acquisition, ...
-        %     'Bandpass', band_pass, ...
-        %     'Downsample', F_interpolation, ...
+        %     'Bandpass', config.band_pass, ...
+        %     'Downsample', config.F_interpolation, ...
         %     'BadThresh', 5, ...
-        %     'useDipoleFit', heavy_artifact_rej, ...
+        %     'useDipoleFit', config.heavy_artifact_rej, ...
         %     'LineFreq', utilityFreq);
 
         n_samples = size(segment_signal_clean, 2);      % number of time samples
@@ -171,16 +184,18 @@ function Source_Reconstruction_DKA_MNI(split, patient_info, dir_output, max_time
         close(figure(1)); 
 
         %% Extract sensor space features
+        disp("Computing average features per sensor...")
         features_samples = feature_resolution*Fs;
         feature_segments = n_samples/features_samples;
 
         info = struct( ...
             'Fs', Fs, ...
             'patientID', char(patient_ID), ...
+            'time_from_ROSC', time_from_ROSC, ... 
             'CPC', CPC, ...
             't_start', t_start,...
             'segmentID', segments{i_file}, ...
-            'partID', '', ...
+            'partID', '', ... % Updated in the feaure loop
             'resolution', feature_resolution, ...
             'epoch_length', epoch_length, ...   % in samples or seconds 
             'overlap', overlap);
@@ -194,11 +209,13 @@ function Source_Reconstruction_DKA_MNI(split, patient_info, dir_output, max_time
             signal_part = segment_signal_clean(:, signal_part_index);
 
             info.partID = part;
-            info.t_start = info.t_start + seconds((part-1)*feature_resolution);
-            partial_features = extract_eeg_features(signal_part, info, chanNames, []);
+            
+            partial_features = extract_eeg_features(signal_part, info, chanNames, [], config);
+
+            info.t_start = info.t_start + seconds(feature_resolution);
 
             Features_plain_EEG = [Features_plain_EEG; partial_features];
-        end
+        end 
   
         % tmp_EEG = [];
         % tmp_EEG.setname = strcat(file_name_prefix, "EEG_Features");
@@ -209,8 +226,14 @@ function Source_Reconstruction_DKA_MNI(split, patient_info, dir_output, max_time
         % sensor_features = EEG_extract_feature_chan(tmp_EEG, feature_resolution);
         % Features_plain_EEG = format_features(sensor_features, info, feature_segments, chanNames);
 
-        excel_filename = fullfile(dir_table_plain, strcat(file_name_prefix, "EEG_Features"));
-        writetable(Features_plain_EEG, excel_filename, "FileType", "spreadsheet");
+        % Concatenate labels according to feature resolution
+        Features_plain_EEG = attach_labels(Features_plain_EEG, feature_resolution, eeg_labels, labels_resolution);
+
+        % Format with significant digits
+        Features_plain_EEG = format_table(Features_plain_EEG, chanNames, output_digits); 
+
+        excel_filename = fullfile(dir_table_plain, strcat(file_name_prefix, "EEG_Features.csv"));
+        writetable(Features_plain_EEG, excel_filename);
 
         clear('Features_plain_EEG','cfg','segment_signal', 'image_name_full', 'partial_features', ...
               'excel_filename', 'n_bad_interp', 'data_fieldtrip') 
@@ -227,7 +250,9 @@ function Source_Reconstruction_DKA_MNI(split, patient_info, dir_output, max_time
         voxel_ts = zeros(total_cols_high / n_dir, n_samples);
 
         % Divide the segment in single minutes for reconstruction
-        for reconstruction_minute=1:max_time/reconstruction_resolution
+        for reconstruction_minute=1:config.max_time/reconstruction_resolution
+
+            disp(['Reconstruction Minute: ', num2str(reconstruction_minute)]);
             
             reconstruction_index = (reconstruction_minute-1)*60*Fs+1:reconstruction_minute*60*Fs;
 
@@ -279,7 +304,6 @@ function Source_Reconstruction_DKA_MNI(split, patient_info, dir_output, max_time
             end
         end
 
-
         % Plot random ROI PSDs
         n_rand = 5;  % number of random PSDs to plot
         n_rois = size(roi_list, 1);
@@ -289,7 +313,7 @@ function Source_Reconstruction_DKA_MNI(split, patient_info, dir_output, max_time
         rand_idx = randperm(n_rois, min(n_rand, n_rois));
 
         % Plot
-        fig = figure('Visible','on');
+        fig = figure('Visible','off');
         for i = 1:length(rand_idx)
             plot(freqs, 10*log10(ROI_psd.(roi_list{rand_idx(i)})), 'LineWidth', 1.2);
             hold on;
@@ -310,32 +334,46 @@ function Source_Reconstruction_DKA_MNI(split, patient_info, dir_output, max_time
 
         % Build a structure to save
         PSD_data.patient_ID = patient_ID;
-        PSD_data.psd_resolution = max_time;
+        PSD_data.psd_resolution = config.max_time;
         PSD_data.CPC = CPC;
         PSD_data.ROI_names = roi_list;
         PSD_data.freqs = freqs;
         PSD_data.ROI_psd = ROI_psd;
 
         % Save as .mat
-        mat_filename = fullfile(dir_psd, sprintf('%s_Seg%s_ROI_PSD', patient_ID, segments{i_file}));
+        mat_filename = fullfile(dir_psd, strcat(file_name_prefix, "ROI__PSD"));
         save(mat_filename, '-struct', 'PSD_data');
         disp(['Saved ROI PSD data to: ', mat_filename]);
         
         %% Compute average bandpower per ROI (source space)
         disp("Computing average features per ROI...")
 
+        info = struct( ...
+            'Fs', Fs, ...
+            'patientID', char(patient_ID), ...
+            'time_from_ROSC', time_from_ROSC, ... 
+            'CPC', CPC, ...
+            't_start', t_start,...
+            'segmentID', segments{i_file}, ...
+            'partID', '', ... % Updated in the feaure loop
+            'resolution', feature_resolution, ...
+            'epoch_length', epoch_length, ...   % in samples or seconds 
+            'overlap', overlap);
+        
         Features_source_EEG = [];
-
+        
         for part = 1:feature_segments
-
+        
             signal_part_index = (part-1)*features_samples+1:part*features_samples;
-
+        
             signal_part = voxel_ts(:, signal_part_index);
-
+        
             info.partID = part;
-            info.t_start = info.t_start + seconds((part-1)*feature_resolution);
-            partial_features = extract_eeg_features(signal_part, info, roi_list, ROI_mask);
-
+        
+            partial_features = extract_eeg_features(signal_part, info, roi_list, ROI_mask, config);
+        
+            info.t_start = info.t_start + seconds(feature_resolution);
+        
             Features_source_EEG = [Features_source_EEG; partial_features];
         end
         
@@ -348,10 +386,15 @@ function Source_Reconstruction_DKA_MNI(split, patient_info, dir_output, max_time
         % sources_features = EEG_extract_feature_chan(tmp_EEG);
         % Features_source_EEG = format_features(sources_features, info, feature_segments, roi_list);
 
+        % Concatenate labels according to feature resolution
+        Features_source_EEG = attach_labels(Features_source_EEG, feature_resolution, eeg_labels, labels_resolution);
+
+        % Format with significant digits
+        Features_source_EEG = format_table(Features_source_EEG, roi_list, output_digits);     
         
         % Save to Excel
-        excel_filename = fullfile(dir_table, strcat(file_name_prefix, "ROI_Features"));
-        writetable(Features_source_EEG, excel_filename, "FileType", "spreadsheet");
+        excel_filename = fullfile(dir_table, strcat(file_name_prefix, "ROI_Features.csv"));
+        writetable(Features_source_EEG, excel_filename);
 
         disp(['Saved ROI features to: ', excel_filename]);
 
@@ -359,11 +402,29 @@ function Source_Reconstruction_DKA_MNI(split, patient_info, dir_output, max_time
               'excel_filename', 'voxel_ts', 'voxel_ts_part', 'ROI_psd', 'fig', 'psd_voxels', 'signal_part', ...
               'ui_controls', 'time_clean', 'pxx', 'segment_signal_clean', 'signal_clean_part');
 
-        % Next file
-        i_file=i_file+1;
+        % Stop timer
+        elapsedTime = toc(tStart);
+    
+        % Write log
+        text = sprintf('Completed: %s', eegFiles{i_file});
+        write_log(log_filename, text, elapsedTime);
 
-        catch
-        fprintf("Problems with Segment %s. Skipping...\n", segments{i_file});
+        % Next file + add analised without issues
+        i_file=i_file+1;
+        n_analysed = n_analysed+1;
+
+        catch ME
+            fprintf("Problems with Segment %s. Skipping...\n", segments{i_file});
+            % Stop timer
+            elapsedTime = toc(tStart);
+        
+            % Write log
+            text = sprintf('Error with: %s, -- %s ', eegFiles{i_file}, ME.message);
+            write_log(log_filename, text, elapsedTime);
+
+            % Next file
+            i_file=i_file+1;
+           
         end
           
     end  
@@ -419,11 +480,10 @@ end
 function formatted_features = format_features(feature_struct, infoStruct, feature_segments, chanNames)
 
     Fs         = infoStruct.Fs;
-    epochLen   = infoStruct.epoch_length;
-    overlap    = infoStruct.overlap;
 
     patientID  = infoStruct.patientID;
     segmentID  = infoStruct.segmentID;
+    t_fromROSC = infoStruct.time_from_ROSC;
     CPC        = infoStruct.CPC;
     resolution = infoStruct.resolution;
 
@@ -440,8 +500,8 @@ function formatted_features = format_features(feature_struct, infoStruct, featur
             partID  = part;
             t_start = infoStruct.t_start + seconds((part-1)*10);
 
-            featTable = table({patientID}, {segmentID}, partID, {CPC}, {t_start}, resolution, Fs, ft_name, "nan", ...
-                'VariableNames', {'Patient','Segment','Part','CPC','Start_Time','Sec_Resolution','Fs','Feature_Name','Unit'});
+            featTable = table({patientID}, {segmentID}, partID, t_fromROSC, {CPC}, {t_start}, resolution, Fs, ft_name, "nan", ...
+                'VariableNames', {'Patient','Segment','Part','Time_from_ROSC','CPC','Start_Time','Sec_Resolution','Fs','Feature_Name','Unit'});
             featValues = array2table(ft_values, 'VariableNames', matlab.lang.makeValidName(chanNames));
 
             partial_feature = [featTable, featValues];
@@ -469,4 +529,14 @@ function plot_sensors_signals(segment_signal_clean, time_clean, chanNames, Fs, p
     % Create invisible figure
     fig = figure('Visible','off');
     ft_databrowser(cfg, data_fieldtrip);
+end
+
+function table = format_table(table, numeric_columns, significant_digits)
+
+    for c = 1:length(numeric_columns)
+        col = double(table.(numeric_columns{c}));
+        % round numerically to 4 significant digits
+        table.(numeric_columns{c}) = round(col, significant_digits, 'significant');
+    end
+
 end
