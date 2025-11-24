@@ -1,4 +1,4 @@
-function [start_file_idx, n_analised_segments] = get_resume_point(dir_out, patient_ID, segments)
+function [start_file_idx, n_analised_segments, last_h] = get_resume_point(dir_out, patient_ID, segments)
 %GET_RESUME_POINT  Determine where to resume processing segments and parts
 %
 %   [start_file_idx, p_start, last_seg, last_part] = get_resume_point(dir_out, patient_ID, segments)
@@ -23,7 +23,7 @@ function [start_file_idx, n_analised_segments] = get_resume_point(dir_out, patie
     dir_table = dir_out;
 
     % Search for all processed files for this patient
-    search_pattern = sprintf('%s_*_*_ROI_Features.xls', patient_ID);
+    search_pattern = sprintf('%s_*_ROI_Features.csv', patient_ID);
     existing_files = dir(fullfile(dir_table, search_pattern));
 
     % If nothing is found, start from scratch
@@ -31,6 +31,7 @@ function [start_file_idx, n_analised_segments] = get_resume_point(dir_out, patie
         fprintf('No preprocessed files found for patient %s. Starting fresh.\n', patient_ID);
         start_file_idx = 1;
         n_analised_segments = 0;
+        last_h = 1;
         return;
     end
 
@@ -38,20 +39,19 @@ function [start_file_idx, n_analised_segments] = get_resume_point(dir_out, patie
     [~, newest_idx] = max([existing_files.datenum]);
     last_file = existing_files(newest_idx).name;
 
-    % Extract the segment (e.g., '001_004') and part number (e.g., 1)
+    % Extract the segment (e.g., '001_004') and hour (e.g., 1)
     tokens = regexp(last_file, ...
-        sprintf('%s_(\\d+_\\d+)_ROI_Features', patient_ID), ...
+        sprintf('%s_(\\d+_\\d+)_H(\\d+)_ROI_Features', patient_ID), ...
         'tokens', 'once');
-    % sprintf('%s_Seg(\\d+_\\d+)_Part(\\d+)_ROI_Features', patient_ID),
 
     if isempty(tokens)
         error('File naming format is incorrect: %s', last_file);
     end
 
     last_seg = tokens{1};        % e.g., '001_004'
-    % last_part = str2double(tokens{2});  % e.g., 1
+    last_h = str2double(tokens{2});  % e.g., 1
 
-    fprintf('Last processed file: %s\n', last_file);
+    fprintf('Last processed file: %s, hour %d\n', last_file, last_h);
     % fprintf('Segment: %s | Part: %d\n\n', last_seg, last_part);
 
     % Find index of last processed segment in provided list
@@ -62,10 +62,11 @@ function [start_file_idx, n_analised_segments] = get_resume_point(dir_out, patie
     end
 
     % Decide where to resume
-    start_file_idx = last_seg_idx + 1;
+    start_file_idx = last_seg_idx;
+    last_h = last_h + 1;
 
     % Safety check: if max segmets already analysed
-    n_analised_segments = length(tokens);
+    n_analised_segments = size(tokens, 1);
  
     % Safety check: if beyond last segment
     if start_file_idx > length(segments)

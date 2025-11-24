@@ -1,4 +1,4 @@
-function [headmodel, elec_aligned, scalp_mesh] = prepare_headmodel_and_electrodes(mri, elec_labels)
+function [headmodel, elec_aligned, scalp_mesh, segmented_mri] = prepare_headmodel_and_electrodes(mri, elec_labels)
 %PREPARE_HEADMODEL_AND_ELECTRODES Segment MRI, create headmodel, align electrodes
 %
 % Inputs:
@@ -84,11 +84,11 @@ title('Aligned Electrodes');
 
 %% Segment MRI and create headmodel
 cfg = [];
-cfg.output = {'scalp', 'skull', 'brain'};
+cfg.output = {'brain', 'skull', 'scalp'};
 segmented_mri = ft_volumesegment(cfg, mri);
 
 cfg = [];
-cfg.method = 'bemcp';  % alternative 'dipoli 'or 'singleshell' for more precise
+cfg.method = 'dipoliclear';  % alternative 'dipoli 'or 'singleshell' for more precise
 headmodel = ft_prepare_headmodel(cfg, segmented_mri);
 
 end

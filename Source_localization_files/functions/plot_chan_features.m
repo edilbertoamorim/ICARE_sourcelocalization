@@ -78,8 +78,8 @@ function plot_chan_features(patient_info, output_folder)
 
     %% Identify features and load electrode layout
     feature_names = unique(all_data.Feature_Name);
-    channel_labels = all_data.Properties.VariableNames(8:end-1); % assuming columns 8:end-1 are channels
-    n_channels = numel(channel_labels);
+    channel_labels = chanNames; % assuming columns 8:end-1 are channels
+    % n_channels = numel(channel_labels);
 
     % Load standard 10-20 channel positions (adjust path if needed)
     try
@@ -118,29 +118,28 @@ function plot_chan_features(patient_info, output_folder)
             rows_seg = (string(T_feat.Segment) == seg);
             T_seg = T_feat(rows_seg, :);
 
-            unique_parts = unique(T_seg.Part);
+            unique_hours = unique(T_seg.Hour);
 
-            for p = 1:length(unique_parts)
+            for h = 1:length(unique_hours)
                 % Filter by this part
-                part = unique_parts(p); 
-                rows_part = (T_seg.Part == part);
-                T_part = T_seg(rows_part, :);
+                rows_h = (T_seg.Hour == h);
+                T_h = T_seg(rows_h, :);
 
                 % Extract Channel data
-                chan_values = table2array(T_part(:,chanNames)); % Channels columns
-                mean_values = mean(chan_values, 1, 'omitnan'); % average if multiple rows per part
+                chan_values = table2array(T_h(:,chanNames));    % Channels columns
+                mean_values = mean(chan_values, 1, 'omitnan');  % average over hours rows per part
 
                 % Plot topomap
                 figure('Visible','off');
                 topoplot(mean_values, chanlocs, 'maplimits','maxmin','style','both','electrodes','on');
                 colorbar;
-                title(sprintf('%s - Seg %s Part %d\n%s (%s)', ...
-                    patient_ID, seg, part, feature, unit), 'Interpreter','none');
+                title(sprintf('%s - Seg %s Hour %d\n%s (%s)', ...
+                    patient_ID, seg, h, feature, unit), 'Interpreter','none');
               
 
                 %% Save figure
-                fig_name = sprintf('%s_Seg%s_%s_Part%d_EEG.png', ...
-                    patient_ID, seg, feature, part);
+                fig_name = sprintf('%s_Seg%s_%s_H%d_EEG.png', ...
+                    patient_ID, seg, feature, h);
                 saveas(gcf, fullfile(dir_plots, fig_name));
                 close(gcf);
             end

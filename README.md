@@ -55,7 +55,7 @@ Source_localization/
 ### Step 0.2: Files Preparation
 - In case needed a standard Lead-Field model is provided in Standard_DK_MNI_atlas.mat
 - The file scripts/LFM_generation.m allows personalised generation of forward models starting from individual MRI data in Fieldtrip format. An atlas is also needed (sample DK Atlas provided)
-- Run scripts/Get_patients_ID.m to generate the list of patients to process (this list can be filtered in the script if needed)  
+- Run scripts/Get_patients_ID.m to generate the list of patients to process (this list can be filtered if needed)  
 
 ### Step 1: Process Patients
 - Run A1_Source_localization.m to download signals and reconstruct source activity.  
@@ -64,7 +64,7 @@ Source_localization/
     Source_localization_files/leadfield_output (generated) 
 - **Output:** Features and PSDs saved in Data/OUTPUT/Source_Reconstruction/<PATIENT_ID>
 
-> **Note:** If lead fields are not already generated, run LFM_generation.m using mri data and adapting the electrodes to the headmodel (manually) before Step 1.
+> **Note:** If lead fields are not already generated, run LFM_generation.m using mri data and adapting the electrodes to the headmodel (if not aligned already) before Step 1.
 
 ### Step 2: Visualize Features
 - Run A2_Plot_X_Features.m to generate the features maps.  
@@ -74,15 +74,15 @@ Source_localization/
 - WARNING : Development...
 
 
-### Dependencies
+### Dependencies (2024 or more recent versions)
 - MATLAB (R2021b or newer)  
-- EEGLAB (included in eeglab2025 - download: https://sccn.ucsd.edu/eeglab/download.php)  
+- EEGLAB (included in eeglab - download: https://sccn.ucsd.edu/eeglab/download.php)  
 - FieldTrip (included in fieldtrip - download: https://www.fieldtriptoolbox.org/download/)  
 - WFDB toolbox for Matlab (version 0.10 or above - https://github.com/ikarosilva/wfdb-app-toolbox?tab=readme-ov-file)  
 
 ### Notes
 - For detailed explanation of parameters, check comments inside each .m file.
-- The scripts **LFM_generation.m** and **Get_patient_IDs.m** are used to create the resources needed in the main scripts 
+- The scripts **LFM_generation.m** and **Get_patient_IDs.m** are used to create the resources needed in the main scripts. Get_patient_IDs.m uses only the training split of the dataset at the moment.
 
 ## References
 

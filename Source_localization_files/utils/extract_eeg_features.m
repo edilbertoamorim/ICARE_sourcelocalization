@@ -24,6 +24,7 @@ function featTable = extract_eeg_features(signal, infoStruct, chanNames, ROI_mas
     t_fromROSC = infoStruct.time_from_ROSC;
     partID     = infoStruct.partID;
     CPC        = infoStruct.CPC;
+    hour_seg   = infoStruct.hour_seg;
     resolution = infoStruct.resolution;
     t_start    = infoStruct.t_start;
 
@@ -39,14 +40,11 @@ function featTable = extract_eeg_features(signal, infoStruct, chanNames, ROI_mas
     % =====================================================================
 
     %% --- Band powers (absolute + relative)
-    % Define frequency bands
-    
-
     [bpVals, bpNames, bpUnits] = compute_bandpowers(signal, Fs, ROI_mask, epochLen, overlap, bands, total_range);
 
     % Store each band as row in featData
     for f = 1:numel(bpNames)
-        featData = [featData; {patientID, segmentID, partID, t_fromROSC, CPC, t_start, resolution, Fs, ...
+        featData = [featData; {patientID, segmentID, t_fromROSC, CPC, hour_seg, partID, t_start, resolution, Fs, ...
             bpNames{f}, bpUnits{f}, bpVals(f,:)}];
     end
 
@@ -55,7 +53,7 @@ function featTable = extract_eeg_features(signal, infoStruct, chanNames, ROI_mas
     [ftVals, ftNames, ftUnits] = compute_other(signal, Fs, ROI_mask, feat_bool);
 
     for f = 1:numel(ftNames)
-        featData = [featData; {patientID, segmentID, partID, t_fromROSC, CPC, t_start, resolution, Fs, ...
+        featData = [featData; {patientID, segmentID, t_fromROSC, CPC, hour_seg, partID, t_start, resolution, Fs, ...
             ftNames{f}, ftUnits{f}, ftVals(f,:)}];
     end
 
@@ -63,23 +61,27 @@ function featTable = extract_eeg_features(signal, infoStruct, chanNames, ROI_mas
     % Convert featData into table
     % =====================================================================
     nFeatures = size(featData,1);
-    var_names = {'Patient','Segment','Part','Time_from_ROSC','CPC','Start_Time','Sec_Resolution','Fs','Feature_Name','Unit'};
+    var_names = {'Patient','Segment','Time_from_ROSC','CPC','Hour','Part','Start_Time','Sec_Resolution','Fs','Feature_Name','Unit'};
 
+    % Get numerical values
     featMat = cell2mat(cellfun(@(x) reshape(x,1,[]), featData(:,length(var_names)+1), 'UniformOutput', false));
     
+    % Repeat same info for this part
     featTable = table( ...
         repmat({patientID}, nFeatures,1), ...
         repmat(segmentID, nFeatures,1), ...
-        repmat(partID, nFeatures,1), ...
         repmat(t_fromROSC, nFeatures,1), ...
         repmat({CPC}, nFeatures,1), ...
+        repmat({hour_seg}, nFeatures,1), ...
+        repmat(partID, nFeatures,1), ...
         repmat({t_start}, nFeatures,1), ...
         repmat(resolution, nFeatures,1), ...
         repmat(Fs, nFeatures,1), ...
-        featData(:,9), ...
-        featData(:,10), ...
+        featData(:,length(var_names)-1), ...
+        featData(:,length(var_names)), ...
         'VariableNames', var_names);
     
+    % Concatenate values
     featTable = [featTable array2table(featMat, 'VariableNames', matlab.lang.makeValidName(chanNames))];
 end
 
@@ -112,7 +114,7 @@ function [vals, featNames, units] = compute_bandpowers(signal, Fs, ROI_mask, epo
         x = signal(ch,:);
 
         % Compute PSD with Welch
-        [Pxx,f] = pwelch(x, winSize, noverlap, winSize/2, Fs); % Pxx: power/Hz
+        [Pxx,f] = pwelch(x, winSize, noverlap, winSize, Fs); % Pxx: power/Hz
 
         % total power across full band
         totP(ch) = bandpower(Pxx, f, totalBand, 'psd');
@@ -121,6 +123,15 @@ function [vals, featNames, units] = compute_bandpowers(signal, Fs, ROI_mask, epo
         for b = 1:nBands
             absP(b,ch) = bandpower(Pxx, f, bands{b,2}, 'psd');
         end
+
+        % % Compute dircty bp
+        % % total power across full band
+        % totP(ch) = bandpower(x, Fs, totalBand);
+        % 
+        % % band powers
+        % for b = 1:nBands
+        %     absP(b,ch) = bandpower(x, Fs, bands{b,2});
+        % end
     end
 
     relP = absP ./ totP * 100;
@@ -150,12 +161,12 @@ function [vals, featNames, units] = compute_bandpowers(signal, Fs, ROI_mask, epo
 
     % first list all absolute-power feature names
     for b = 1:nBands
-        featNames{b} = ['AbsPower_' bands{b,1} ];
+        featNames{b} = ['AbsPower_' bands{b,1}];
         units{b} = 'dB';
     end
     % then list all relative-power feature names (matching the order in vals)
     for b = 1:nBands
-        featNames{nBands + b} = ['AbsPower_' bands{b,1}  x];
+        featNames{nBands + b} = ['RelPower_' bands{b,1}];
         units{nBands + b} = '%';
     end
 end

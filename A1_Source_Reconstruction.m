@@ -42,7 +42,7 @@ clear; close all; clc;
 
 %% Configurable variables:
 PATIENT_TABLE  =  'ICARE_patient_metadata';
-VERBOSE        = 1;     % Intermediate champagne plot
+VERBOSE        = 0;     % Intermediate champagne plot
 split = 'training';     % I-CARE dataset split to look at (only 'training at the moment', ICARE_patient_metadata must be modified)
 
 

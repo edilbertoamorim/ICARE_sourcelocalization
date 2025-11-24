@@ -23,7 +23,7 @@ ft_defaults
 output_dir  = 'Source_localization_files/leadfield_output';
 high_res    = 6;     % mm grid spacing
 low_res     = 12;    % mm grid spacing
-inwardshift = -0.5;  % push source grid inward to avoid skull boundary
+inwardshift = -5;  % push source grid inward to avoid skull boundary
 normalizeLF = 'yes'; % normalize leadfield vectors
 plot_flag   = 0;     % Plot all ROI in different figures (WARNING 86 figures) 
 
@@ -40,7 +40,7 @@ elec_labels = {'Fp1','Fp2','F3','F4','C3','C4','P3','P4','O1','O2',...
 %% 3) Compute leadfields and resources 
 
 % prepare common steps !! Might take long time !!
-[headmodel, elec_aligned, scalp_mesh] = prepare_headmodel_and_electrodes(mri, elec_labels);
+[headmodel, elec_aligned, scalp_mesh, seg_mri] = prepare_headmodel_and_electrodes(mri, elec_labels);
 
 % low-resolution leadfield
 [LF_low, leadfield_low, inside_low, src_low] = compute_sourcemodel_and_leadfield(mri, elec_aligned, headmodel, low_res, inwardshift, normalizeLF);

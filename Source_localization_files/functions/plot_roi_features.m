@@ -78,7 +78,6 @@ function plot_roi_features(patient_info, output_folder)
 
     %% Identify features and configurations
     feature_names = unique(all_data.Feature_Name);
-    sec_resolution = unique(all_data.Sec_Resolution);
 
     %% Loop over each feature
     for f = 1:length(feature_names)
@@ -106,17 +105,16 @@ function plot_roi_features(patient_info, output_folder)
             rows_seg = (string(T_feat.Segment) == seg);
             T_seg = T_feat(rows_seg, :);
 
-            unique_parts = unique(T_seg.Part);
+            unique_hours = unique(T_seg.Hour);
 
 
-            for p = 1:length(unique_parts)
-                % Filter by this part
-                part = unique_parts(p); 
-                rows_part = (T_seg.Part == part);
-                T_part = T_seg(rows_part, :);
+            for h = 1:length(unique_hours)
+                % Filter by this hour 
+                rows_h = (T_seg.Hour == h);
+                T_h = T_seg(rows_h, :);
 
                 % Extract ROI data
-                roi_values = table2array(T_part(:,roi_list)); % ROI columns
+                roi_values = table2array(T_h(:,roi_list)); % ROI columns
                 mean_feat = mean(roi_values, 1);              % mean value (useless now)
 
                 %% Prepare atlas for plotting
@@ -129,19 +127,23 @@ function plot_roi_features(patient_info, output_folder)
                 end
 
                 % Negative values are in dB, so use symmetric scaling around 0
-                max_abs_val = max(abs(mean_feat));    % strongest magnitude
-                clim = [-max_abs_val max_abs_val];   % symmetric around zero
+                % max_abs_val = max(abs(mean_feat));    % strongest magnitude
+                % clim = [-max_abs_val max_abs_val];   % symmetric around zero
                 clim = [min(mean_feat) max(mean_feat)];   % symmetric around zero
 
                 %% Save atlas_tmp as nifti for Surfice if Relative
-                if strcmp(unit, "%")
+                if ~strcmp(unit, "dB")
                     cfg            = [];
                     cfg.filetype   = 'nifti';
                     cfg.parameter  = cfg_funparam;    % or 'avg' if changed
-                    cfg.filename   = fullfile(dir_nifti, sprintf('%s_Seg%s_%s_Part%d.nii.gz', ...
-                                            patient_ID, seg, feature, part));
+                    cfg.filename   = fullfile(dir_nifti, sprintf('%s_Seg%s_%s_H%d.nii.gz', ...
+                                            patient_ID, seg, feature, h));
                     ft_volumewrite(cfg, atlas_tmp);
-                    clim = [0, 70]; 
+                    if strcmp(unit, "%")
+                        clim = [0, 60]; 
+                    elseif strcmp(unit, "a.u.")
+                        clim = [0, 5]; 
+                    end
                 end
                    
                 % Rename the parameter in avg for FieldTrip (optional)
@@ -166,22 +168,22 @@ function plot_roi_features(patient_info, output_folder)
                 ft_sourceplot(cfg, atlas_tmp);
                 
                 % Title includes segment and part
-                title(sprintf('%s - %s | Segment: %s, Part: %d (%s)', ...
-                    patient_ID, feature, seg, part, unit), ...
+                title(sprintf('%s - %s | Segment: %s, Hour: %d (%s)', ...
+                    patient_ID, feature, seg, h, unit), ...
                     'Interpreter', 'none');
 
                 % Colorbar
-                h = colorbar;
+                clbr = colorbar;
                 if strcmpi(unit, 'dB')
-                    h.Label.String = 'Source Power [10log_{10}(\muV^2)]';
+                    clbr.Label.String = 'Source Power [10log_{10}(\muV^2)]';
                 else
-                    h.Label.String = unit;
+                    clbr.Label.String = unit;
                 end
-                h.Label.Interpreter = 'tex';
+                clbr.Label.Interpreter = 'tex';
 
                 %% Save figure
-                fig_name = sprintf('%s_Seg%s_%s_Part%d_SRC.png', ...
-                    patient_ID, seg, feature, part);
+                fig_name = sprintf('%s_Seg%s_%s_H%d_SRC.png', ...
+                    patient_ID, seg, feature, h);
                 saveas(gcf, fullfile(dir_plots, fig_name));
                 close(gcf);
 
