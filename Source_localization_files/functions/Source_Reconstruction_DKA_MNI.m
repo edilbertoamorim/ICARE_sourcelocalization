@@ -72,7 +72,9 @@ function Source_Reconstruction_DKA_MNI(split, patient_info, dir_output, plot_fla
     time_from_ROSC = patient_info.ROSC;
     CPC = patient_info.CPC;
 
+    % examples of data (EEG already preprocessed)
     data_stored = '/wynton/protected/group/amorim-affiliates/ICARE_wfdb_preproc_features/ICA_preproc/';
+    data_stored = '/Data/INPUT/EEG_files';
     data_folder = fullfile(data_stored, split, patient_ID);
 
     labels_stored = '/wynton/protected/group/amorim-phi/ZackYin/wfdb/labels+artifact/';

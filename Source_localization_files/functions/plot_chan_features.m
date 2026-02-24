@@ -120,7 +120,8 @@ function plot_chan_features(patient_info, output_folder)
 
             unique_hours = unique(T_seg.Hour);
 
-            for h = 1:length(unique_hours)
+            for hr = 1:length(unique_hours)
+                h = unique_hours(hr);
                 % Filter by this part
                 rows_h = (T_seg.Hour == h);
                 T_h = T_seg(rows_h, :);
